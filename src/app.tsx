@@ -224,7 +224,7 @@ const KQLLibrary = () => {
                 setSelectedSubCategory(null);
               }}
             >
-              <span className={categoryInfo[category]?.textColor}>
+              <span className="text-[#bd93f9]">
                 {categoryInfo[category]?.displayName || category}
               </span>
             </Button>
@@ -234,7 +234,7 @@ const KQLLibrary = () => {
         {selectedCategory && categoryInfo[selectedCategory]?.subCategories?.length > 0 && (
           <div className="flex flex-wrap justify-center gap-4 mb-6">
             {categoryInfo[selectedCategory].subCategories.map((subCategory: string) => (
-              <Button
+                              <Button
                 key={subCategory}
                 className={cn(
                   "px-4 py-2 rounded-md bg-gray-800 hover:bg-gray-700",
@@ -245,6 +245,7 @@ const KQLLibrary = () => {
                 onClick={() => setSelectedSubCategory(prev => prev === subCategory ? null : subCategory)}
               >
                 {subCategory}
+                <span className="text-[#ff79c6]">{subCategory}</span>
               </Button>
             ))}
           </div>
@@ -262,10 +263,10 @@ const KQLLibrary = () => {
                 className="border-gray-800 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 bg-gray-900/90 backdrop-blur-md flex flex-col transform hover:-translate-y-1"
               >
                 <CardHeader className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-t-lg border-b border-gray-800">
-                  <CardTitle className="text-lg font-semibold text-white">
+                  <CardTitle className="text-lg font-semibold text-[#50fa7b]">
                     {query.title}
                   </CardTitle>
-                  <CardDescription className="text-gray-300">
+                  <CardDescription className="text-[#ffb86c]">
                     {query.description}
                   </CardDescription>
                 </CardHeader>
