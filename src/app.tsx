@@ -18,7 +18,7 @@ const Button = ({
   <button
     className={cn(
       "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors",
-      "focus:outline-none focus:ring-1 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950",
+      "focus:outline-none focus:ring-1 focus:ring-[#8be9fd] focus:ring-offset-2 focus:ring-offset-gray-950",
       "disabled:opacity-50 disabled:pointer-events-none",
       className
     )}
@@ -58,7 +58,7 @@ const CardTitle = ({ className = "", children, ...props }: any) => (
 
 const CardDescription = ({ className = "", children, ...props }: any) => (
   <p
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-sm text-[#ffb86c]", className)}
     {...props}
   >
     {children}
@@ -216,7 +216,7 @@ const KQLLibrary = () => {
                 "px-4 py-2 rounded-md font-medium",
                 categoryInfo[category]?.buttonBg,
                 selectedCategory === category
-                  ? "bg-gray-700 ring-1 ring-orange-500"
+                  ? "bg-gray-700 ring-1 ring-[#8be9fd]"
                   : ""
               )}
               onClick={() => {
@@ -239,7 +239,7 @@ const KQLLibrary = () => {
                 className={cn(
                   "px-4 py-2 rounded-md bg-gray-800 hover:bg-gray-700",
                   selectedSubCategory === subCategory
-                    ? "bg-gray-700 ring-1 ring-orange-500"
+                    ? "bg-gray-700 ring-1 ring-[#8be9fd]"
                     : ""
                 )}
                 onClick={() => setSelectedSubCategory(prev => prev === subCategory ? null : subCategory)}
@@ -281,7 +281,7 @@ const KQLLibrary = () => {
                       {query.tags.map((tag, i) => (
                         <span 
                           key={i} 
-                          className="text-xs px-2 py-1 rounded-full bg-gray-800 text-gray-300"
+                          className="text-xs px-2 py-1 rounded-full bg-gray-800 text-[#8be9fd]"
                         >
                           {tag}
                         </span>
