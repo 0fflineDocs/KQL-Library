@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
+// Inline the cn utility function
+const cn = (...classes: (string | undefined | null | false)[]) => {
+  return classes.filter(Boolean).join(' ');
+};
 import { Github, List } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -55,37 +58,44 @@ const KQLLibrary = () => {
   const categoryInfo: any = {
     "Entra ID": {
       displayName: "Entra ID",
-      gradient: "bg-gradient-to-r from-blue-500 to-blue-600",
+      textColor: "text-blue-400",
+      buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: ["Conditional Access", "Passwordless", "Temporary Access Pass", "Guests"]
     },
     "Defender for Identity": {
       displayName: "Defender for Identity",
-      gradient: "bg-gradient-to-r from-yellow-500 to-yellow-600",
+      textColor: "text-yellow-400",
+      buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: ["Service Accounts", "Dormant Accounts"]
     },
     "Defender for Endpoint": {
       displayName: "Defender for Endpoint",
-      gradient: "bg-gradient-to-r from-green-500 to-green-600",
+      textColor: "text-green-400",
+      buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: []
     },
     "Defender for Office 365": {
       displayName: "Defender for Office 365",
-      gradient: "bg-gradient-to-r from-orange-500 to-orange-600",
+      textColor: "text-orange-400",
+      buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: []
     },
     "Defender for Cloud Apps": {
       displayName: "Defender for Cloud Apps",
-      gradient: "bg-gradient-to-r from-purple-500 to-purple-600",
+      textColor: "text-purple-400", 
+      buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: []
     },
     "Sentinel": {
       displayName: "Sentinel",
-      gradient: "bg-gradient-to-r from-red-500 to-red-600",
+      textColor: "text-red-400",
+      buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: ["Hunting", "Automation"]
     },
     "Intune": {
       displayName: "Intune",
-      gradient: "bg-gradient-to-r from-cyan-500 to-cyan-600",
+      textColor: "text-cyan-400",
+      buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: []
     }
   };
@@ -126,20 +136,21 @@ const KQLLibrary = () => {
           {categories.map((category) => (
             <Button
               key={category}
-              variant="outline"
               className={cn(
-                "px-4 py-2 rounded-full transition-colors duration-200 text-white",
-                categoryInfo[category]?.gradient,
+                "px-4 py-2 rounded-md font-medium transition-all duration-200",
+                categoryInfo[category]?.buttonBg,
                 selectedCategory === category
-                  ? "ring-2 ring-offset-2 ring-gray-950"
-                  : "bg-gray-800/50 hover:bg-gray-700/50"
+                  ? "bg-gray-700 ring-1 ring-orange-500"
+                  : ""
               )}
               onClick={() => {
                 setSelectedCategory(prev => prev === category ? null : category);
                 setSelectedSubCategory(null);
               }}
             >
-              {categoryInfo[category]?.displayName || category}
+              <span className={categoryInfo[category]?.textColor}>
+                {categoryInfo[category]?.displayName || category}
+              </span>
             </Button>
           ))}
         </div>
@@ -151,11 +162,10 @@ const KQLLibrary = () => {
                 key={subCategory}
                 variant="outline"
                 className={cn(
-                  "px-4 py-2 rounded-full transition-colors duration-200 text-white",
-                  "bg-gray-800/50 hover:bg-gray-700/50",
+                  "px-4 py-2 rounded-full transition-all duration-200 text-white bg-gray-800 hover:bg-gray-700 border border-gray-700",
                   selectedSubCategory === subCategory
-                    ? "ring-2 ring-offset-2 ring-gray-950"
-                    : ""
+                    ? "ring-2 ring-white ring-offset-2 ring-offset-gray-950 scale-105 shadow-lg"
+                    : "hover:scale-105"
                 )}
                 onClick={() => setSelectedSubCategory(prev => prev === subCategory ? null : subCategory)}
               >
@@ -172,17 +182,36 @@ const KQLLibrary = () => {
             </div>
           ) : (
             filteredQueries.map((query, index) => (
-              <Card key={index} className="border-gray-800 hover:shadow-lg transition-shadow duration-200 bg-gray-900/90 backdrop-blur-md flex flex-col">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold">{query.title}</CardTitle>
-                  <CardDescription className="text-gray-400">{query.description}</CardDescription>
+              <Card 
+                key={index} 
+                className="border-gray-800 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 bg-gray-900/90 backdrop-blur-md flex flex-col transform hover:-translate-y-1"
+              >
+                <CardHeader className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-t-lg border-b border-gray-800">
+                  <CardTitle className="text-lg font-semibold text-white">
+                    {query.title}
+                  </CardTitle>
+                  <CardDescription className="text-gray-300">
+                    {query.description}
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-full w-full rounded-md border border-gray-800 bg-gray-950">
+                <CardContent className="flex-1">
+                  <ScrollArea className="h-full w-full rounded-md border border-gray-800 bg-gray-950 mt-2">
                     <pre className="p-4 text-sm text-gray-200 whitespace-pre-wrap break-words">
                       <code>{query.query}</code>
                     </pre>
                   </ScrollArea>
+                  {query.tags && query.tags.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {query.tags.map((tag, i) => (
+                        <span 
+                          key={i} 
+                          className="text-xs px-2 py-1 rounded-full bg-gray-800 text-gray-300"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))
