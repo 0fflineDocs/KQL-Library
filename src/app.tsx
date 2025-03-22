@@ -1,13 +1,90 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Github, List } from "lucide-react";
+
 // Inline the cn utility function
 const cn = (...classes: (string | undefined | null | false)[]) => {
   return classes.filter(Boolean).join(' ');
 };
-import { Github, List } from "lucide-react";
-import { Input } from "@/components/ui/input";
+
+// Inline component imports to avoid path issues
+// Button component
+const Button = ({ 
+  variant = "default", 
+  size = "default", 
+  className = "", 
+  children, 
+  ...props 
+}: any) => (
+  <button
+    className={cn(
+      "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors",
+      "focus:outline-none focus:ring-2 focus:ring-blue-800 focus:ring-offset-2 focus:ring-offset-gray-950",
+      "disabled:opacity-50 disabled:pointer-events-none",
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+// Card components
+const Card = ({ className = "", children, ...props }: any) => (
+  <div
+    className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}
+    {...props}
+  >
+    {children}
+  </div>
+);
+
+const CardHeader = ({ className = "", children, ...props }: any) => (
+  <div className={cn("flex flex-col space-y-1.5 p-6", className)} {...props}>
+    {children}
+  </div>
+);
+
+const CardTitle = ({ className = "", children, ...props }: any) => (
+  <p
+    className={cn(
+      "text-2xl font-semibold leading-none tracking-tight",
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </p>
+);
+
+const CardDescription = ({ className = "", children, ...props }: any) => (
+  <p
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  >
+    {children}
+  </p>
+);
+
+const CardContent = ({ className = "", children, ...props }: any) => (
+  <div className={cn("p-6 pt-0", className)} {...props}>
+    {children}
+  </div>
+);
+
+// ScrollArea component
+const ScrollArea = ({ className = "", children, ...props }: any) => (
+  <div className={cn("overflow-y-auto max-h-64", className)} {...props}>
+    {children}
+  </div>
+);
+
+// Input component
+const Input = ({ className = "", ...props }: any) => (
+  <input
+    className={cn("w-full px-3 py-2 rounded bg-gray-800 border border-gray-700 text-white placeholder:text-gray-400", className)}
+    {...props}
+  />
+);
 
 interface Query {
   title: string;
@@ -108,7 +185,7 @@ const KQLLibrary = () => {
             KQL Library
           </h1>
           <div className="md:hidden">
-            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-300" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <Button className="text-gray-400 hover:text-gray-300" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               <List className="w-6 h-6" />
             </Button>
           </div>
@@ -121,7 +198,6 @@ const KQLLibrary = () => {
               className="w-64 bg-gray-800 border-gray-700 text-gray-200 placeholder:text-gray-400"
             />
             <Button
-              variant="ghost"
               className="text-gray-400 hover:text-gray-300 hover:bg-gray-800/50"
               onClick={() => window.open('https://github.com/0fflineDocs/KQL', '_blank')}
             >
@@ -160,12 +236,11 @@ const KQLLibrary = () => {
             {categoryInfo[selectedCategory].subCategories.map((subCategory: string) => (
               <Button
                 key={subCategory}
-                variant="outline"
                 className={cn(
-                  "px-4 py-2 rounded-full transition-all duration-200 text-white bg-gray-800 hover:bg-gray-700 border border-gray-700",
+                  "px-4 py-2 rounded-md transition-all duration-200 bg-gray-800 hover:bg-gray-700",
                   selectedSubCategory === subCategory
-                    ? "ring-2 ring-white ring-offset-2 ring-offset-gray-950 scale-105 shadow-lg"
-                    : "hover:scale-105"
+                    ? "bg-gray-700 ring-1 ring-orange-500"
+                    : ""
                 )}
                 onClick={() => setSelectedSubCategory(prev => prev === subCategory ? null : subCategory)}
               >
