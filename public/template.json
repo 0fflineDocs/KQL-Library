@@ -1,0 +1,26 @@
+[
+  {
+    "title": "...",
+    "description": "...",
+    "query": "...",
+    "category": "Entra ID",
+    "subCategory": "...",
+    "tags": [
+      "signin",
+      "guest",
+      "user"
+    ]
+  },
+  {
+    "title": "Dormant Accounts",
+    "description": "Users with no sign-in in 90 days",
+    "query": "SigninLogs | summarize count() by UserPrincipalName | where count_ == 0",
+    "category": "Defender for Identity",
+    "subCategory": "Dormant Accounts",
+    "tags": [
+      "inactive",
+      "identity",
+      "account"
+    ]
+  }
+]
