@@ -6,6 +6,71 @@ const cn = (...classes: (string | undefined | null | false)[]) => {
   return classes.filter(Boolean).join(' ');
 };
 
+// Copy Button component
+const CopyButton = ({ text, className = "" }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={cn(
+        "text-xs flex items-center gap-1 px-2 py-1 rounded-full transition-all duration-300",
+        "bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-[#8be9fd]",
+        copied ? "text-[#50fa7b]" : "text-[#8be9fd]",
+        className
+      )}
+    >
+      {copied ? (
+        <>
+          <svg 
+            className="w-3 h-3 animate-pulse" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M5 13l4 4L19 7" 
+            />
+          </svg>
+          <span>Copied!</span>
+        </>
+      ) : (
+        <>
+          <svg 
+            className="w-3 h-3" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" 
+            />
+          </svg>
+          <span>Copy</span>
+        </>
+      )}
+    </button>
+  );
+};
+
 // Inline component imports to avoid path issues
 // Button component
 const Button = ({ 
@@ -321,9 +386,9 @@ const KQLLibrary = () => {
                       <code>{query.query}</code>
                     </pre>
                   </ScrollArea>
-                  {query.tags && query.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {query.tags.map((tag, i) => (
+                  <div className="mt-4 flex flex-wrap gap-2 justify-between items-center">
+                    <div className="flex flex-wrap gap-2">
+                      {query.tags && query.tags.length > 0 && query.tags.map((tag, i) => (
                         <span 
                           key={i} 
                           className="text-xs px-2 py-1 rounded-full bg-gray-800 text-[#8be9fd]"
@@ -332,7 +397,8 @@ const KQLLibrary = () => {
                         </span>
                       ))}
                     </div>
-                  )}
+                    <CopyButton text={query.query} />
+                  </div>
                 </CardContent>
               </Card>
             ))
