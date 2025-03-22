@@ -45,7 +45,7 @@ Each category has its own JSON file with the following structure:
   {
     "title": "Query Title",
     "description": "Query description",
-    "query": "YourKQLQueryHere",
+    "query": "Actual kql-query",
     "category": "Category Name",
     "subCategory": "Subcategory Name",
     "tags": ["tag1", "tag2", "tag3"]
