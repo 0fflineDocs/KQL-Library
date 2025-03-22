@@ -353,7 +353,7 @@ const KQLLibrary = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-y-6">
           {isLoading ? (
             <div className="col-span-full text-center text-gray-400 py-8">
               Loading queries...
@@ -382,7 +382,7 @@ const KQLLibrary = () => {
                 </CardHeader>
                 <CardContent className="flex-1">
                   <ScrollArea className="h-full w-full rounded-md border border-gray-800 bg-gray-950 mt-2">
-                    <pre className="p-4 text-sm text-gray-200 whitespace-pre-wrap break-words">
+                    <pre className="p-4 px-6 text-xs text-gray-200 whitespace-pre-wrap break-words">
                       <code>{query.query}</code>
                     </pre>
                   </ScrollArea>
