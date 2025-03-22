@@ -127,10 +127,13 @@ const KQLLibrary = () => {
             <Button
               key={category}
               variant="outline"
-              className={cn("px-4 py-2 rounded-full transition-colors duration-200 text-white", categoryInfo[category]?.gradient,
+              className={cn(
+                "px-4 py-2 rounded-full transition-colors duration-200 text-white",
+                categoryInfo[category]?.gradient,
                 selectedCategory === category
                   ? "ring-2 ring-offset-2 ring-gray-950"
-                  : "bg-gray-800/50 hover:bg-gray-700/50")}
+                  : "bg-gray-800/50 hover:bg-gray-700/50"
+              )}
               onClick={() => {
                 setSelectedCategory(prev => prev === category ? null : category);
                 setSelectedSubCategory(null);
@@ -147,8 +150,13 @@ const KQLLibrary = () => {
               <Button
                 key={subCategory}
                 variant="outline"
-                className={cn("px-4 py-2 rounded-full transition-colors duration-200 text-white", "bg-gray-800/50 hover:bg-gray-700/50",
-                  selectedSubCategory === subCategory ? "ring-2 ring-offset-2 ring-gray-950" : "")}
+                className={cn(
+                  "px-4 py-2 rounded-full transition-colors duration-200 text-white",
+                  "bg-gray-800/50 hover:bg-gray-700/50",
+                  selectedSubCategory === subCategory
+                    ? "ring-2 ring-offset-2 ring-gray-950"
+                    : ""
+                )}
                 onClick={() => setSelectedSubCategory(prev => prev === subCategory ? null : subCategory)}
               >
                 {subCategory}
