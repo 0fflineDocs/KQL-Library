@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Guest Sign-ins",
+    "description": "List all sign-ins by guest users",
+    "query": "SigninLogs | where UserType == \"Guest\"",
+    "category": "Entra ID",
+    "subCategory": "Guests",
+    "tags": [
+      "signin",
+      "guest",
+      "user"
+    ]
+  }
+]
