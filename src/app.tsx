@@ -234,7 +234,7 @@ const KQLLibrary = () => {
         {selectedCategory && categoryInfo[selectedCategory]?.subCategories?.length > 0 && (
           <div className="flex flex-wrap justify-center gap-4 mb-6">
             {categoryInfo[selectedCategory].subCategories.map((subCategory: string) => (
-                              <Button
+              <Button
                 key={subCategory}
                 className={cn(
                   "px-4 py-2 rounded-md bg-gray-800 hover:bg-gray-700",
@@ -244,7 +244,6 @@ const KQLLibrary = () => {
                 )}
                 onClick={() => setSelectedSubCategory(prev => prev === subCategory ? null : subCategory)}
               >
-                {subCategory}
                 <span className="text-[#ff79c6]">{subCategory}</span>
               </Button>
             ))}
