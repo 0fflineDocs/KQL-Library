@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Github, List, Search, Mail } from "lucide-react";
+import { Github, List, Search, Mail, Clock, Users } from "lucide-react";
 
 // Inline the cn utility function
 const cn = (...classes: (string | undefined | null | false)[]) => {
@@ -307,7 +307,7 @@ const KQLLibrary = () => {
           <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 text-transparent bg-clip-text">
             KQL Library
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <Button
               className="text-gray-400 hover:text-gray-300 p-2 rounded-full hover:bg-gray-800/50"
               onClick={() => setIsSearchModalOpen(true)}
@@ -319,30 +319,6 @@ const KQLLibrary = () => {
               onClick={() => window.open('https://github.com/0fflineDocs/KQL', '_blank')}
             >
               <Github className="w-5 h-5" />
-            </Button>
-            <Button
-              className="text-gray-400 hover:text-gray-300 p-2 rounded-full hover:bg-gray-800/50"
-              onClick={() => window.open('https://twitter.com', '_blank')}
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17.1761 4H20.3037L14.0114 11.0948L21.5 20H16.0347L11.3901 14.5174L6.08694 20H2.95681L9.7248 12.3478L2.5 4H8.14815L12.3407 9.01567L17.1761 4ZM16.7838 18.3587H18.4198L7.28324 5.56522H5.53668L16.7838 18.3587Z" fill="currentColor"/>
-              </svg>
-            </Button>
-            <Button
-              className="text-gray-400 hover:text-gray-300 p-2 rounded-full hover:bg-gray-800/50"
-              onClick={() => window.open('https://bsky.app', '_blank')}
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L5 5.5V12.5L12 16L19 12.5V5.5L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M5 12.5L12 9L19 12.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 9V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </Button>
-            <Button
-              className="text-gray-400 hover:text-gray-300 p-2 rounded-full hover:bg-gray-800/50"
-              onClick={() => window.location.href = 'mailto:contact@example.com'}
-            >
-              <Mail className="w-5 h-5" />
             </Button>
           </div>
         </div>
@@ -450,6 +426,28 @@ const KQLLibrary = () => {
         </div>
       </div>
 
+      {/* Section 5: Bottom Bar - Fixed */}
+      <footer className="bg-gray-900 border-t border-gray-800 py-2.5 px-4">
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <a href="#" className="text-gray-400 hover:text-gray-300 flex items-center gap-1.5 text-sm">
+              <Users className="w-4 h-4" />
+              <span>Contributors</span>
+            </a>
+            <a href="#" className="text-gray-400 hover:text-gray-300 flex items-center gap-1.5 text-sm">
+              <Clock className="w-4 h-4" />
+              <span>Recently Added</span>
+            </a>
+          </div>
+          <div>
+            <a href="#" className="text-gray-400 hover:text-gray-300 flex items-center gap-1.5 text-sm">
+              <Mail className="w-4 h-4" />
+              <span>Contact</span>
+            </a>
+          </div>
+        </div>
+      </footer>
+
       {/* Search Modal */}
       <SearchModal 
         isOpen={isSearchModalOpen} 
@@ -458,3 +456,8 @@ const KQLLibrary = () => {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
       />
+    </div>
+  );
+};
+
+export default KQLLibrary;
