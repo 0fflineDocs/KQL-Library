@@ -184,9 +184,6 @@ const KQLLibrary = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <Footer />
-
       {/* Search Modal */}
       <SearchModal 
         isOpen={isSearchModalOpen} 
