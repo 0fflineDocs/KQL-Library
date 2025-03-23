@@ -1,6 +1,6 @@
 import React from 'react';
-import Card from './ui/Card';
-import CopyButton from './ui/CopyButton';
+import Card from '@/components/ui/Card';
+import CopyButton from '@/components/ui/CopyButton';
 
 interface Query {
   title: string;
@@ -26,7 +26,7 @@ const QueryCard = ({ query }: QueryCardProps) => {
   };
 
   return (
-    <Card className="border-gray-800 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 bg-[#1e1e2e] flex flex-col transform overflow-hidden">
+    <Card className="border-gray-800 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 bg-[#1e1e2e] flex flex-col h-full transform hover:-translate-y-1 overflow-hidden">
       <div className="bg-gray-800 py-3 px-4 flex justify-between items-center">
         <div>
           <h3 className="text-base font-semibold text-[#50fa7b]">
@@ -38,8 +38,8 @@ const QueryCard = ({ query }: QueryCardProps) => {
         </div>
         <CopyButton text={query.query} />
       </div>
-      <div className="flex-1 p-0">
-        <div className={`w-full bg-[#1e1e2e] overflow-auto ${getCardContentHeight(query.query)}`}>
+      <div className="flex-1 p-0 bg-[#1e1e2e]">
+        <div className={`w-full overflow-auto ${getCardContentHeight(query.query)}`}>
           <pre className="p-3 text-xs text-gray-200 whitespace-pre-wrap break-words h-full">
             <code>{query.query}</code>
           </pre>
