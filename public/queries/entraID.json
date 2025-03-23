@@ -2,7 +2,7 @@
   {
     "title": "Guest Sign-ins",
     "description": "List all sign-ins by guest users",
-    "query": "SigninLogs | where UserType == \"Guest\"",
+    "query": "SigninLogs \n| where UserType == \"Guest\"",
     "category": "Entra ID",
     "subCategory": "Guests",
     "tags": [
@@ -14,33 +14,7 @@
   {
     "title": "Dormant Accounts",
     "description": "Users with no sign-in in 90 days",
-    "query": "SigninLogs | summarize count() by UserPrincipalName | where count_ == 0",
-    "category": "Defender for Identity",
-    "subCategory": "Dormant Accounts",
-    "tags": [
-      "inactive",
-      "identity",
-      "account"
-    ]
-  }
-]
-[
-  {
-    "title": "Guest Sign-ins 2",
-    "description": "List all sign-ins by guest users",
-    "query": "SigninLogs | where UserType == \"Guest\"",
-    "category": "Entra ID",
-    "subCategory": "Guests",
-    "tags": [
-      "signin",
-      "guest",
-      "user"
-    ]
-  },
-  {
-    "title": "Guest Invites",
-    "description": "All Guest Invites",
-    "query": "let timerange=180d; let timeframe=7d; AuditLogs | where TimeGenerated > ago (timerange) | render columnchart with",
+    "query": "SigninLogs\n| summarize count() by UserPrincipalName \n| where count_ == 0",
     "category": "Defender for Identity",
     "subCategory": "Dormant Accounts",
     "tags": [
