@@ -8,7 +8,6 @@ import { Query, CategoryInfo } from './types';
 import Header from './components/layout/Header';
 import CategoryNav from './components/layout/CategoryNav';
 import SubcategoryNav from './components/layout/SubcategoryNav';
-import Footer from './components/layout/Footer';
 import QueryCard from './components/QueryCard';
 import SearchModal from './components/SearchModal';
 
