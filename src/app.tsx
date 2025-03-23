@@ -429,38 +429,28 @@ const KQLLibrary = () => {
             ) : (
               filteredQueries.map((query, index) => (
                 <Card 
-                  key={index} 
-                  className="border-gray-800 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 bg-gray-900/90 backdrop-blur-md flex flex-col transform hover:-translate-y-1"
-                >
-                  <CardHeader className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-t-lg border-b border-gray-800">
-                    <CardTitle className="text-lg font-semibold text-[#50fa7b]">
-                      {query.title}
-                    </CardTitle>
-                    <CardDescription className="text-[#ffb86c]">
-                      {query.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    <div className={`w-full rounded-md border border-gray-800 bg-gray-950 mt-2 overflow-auto ${getCardContentHeight(query.query)}`}>
-                      <pre className="p-4 px-6 text-xs text-gray-200 whitespace-pre-wrap break-words h-full">
-                        <code>{query.query}</code>
-                      </pre>
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2 justify-between items-center">
-                      <div className="flex flex-wrap gap-2">
-                        {query.tags && query.tags.length > 0 && query.tags.map((tag, i) => (
-                          <span 
-                            key={i} 
-                            className="text-xs px-2 py-1 rounded-full bg-gray-800 text-[#8be9fd]"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                      <CopyButton text={query.query} />
-                    </div>
-                  </CardContent>
-                </Card>
+                key={index} 
+                className="border-gray-800 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 bg-gray-900 flex flex-col transform hover:-translate-y-1"
+              >
+                <CardHeader className="bg-gray-900 rounded-t-lg border-b border-gray-800">
+                  <CardTitle className="text-lg font-semibold text-[#50fa7b]">
+                    {query.title}
+                  </CardTitle>
+                  <CardDescription className="text-[#ffb86c]">
+                    {query.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1">
+                  <div className={`w-full rounded-md border border-gray-800 bg-[#1e1e2e] mt-2 overflow-auto ${getCardContentHeight(query.query)}`}>
+                    <pre className="p-4 px-6 text-xs text-gray-200 whitespace-pre-wrap break-words h-full">
+                      <code>{query.query}</code>
+                    </pre>
+                  </div>
+                  <div className="mt-4 flex justify-end items-center">
+                    <CopyButton text={query.query} />
+                  </div>
+                </CardContent>
+              </Card>
               ))
             )}
           </div>
