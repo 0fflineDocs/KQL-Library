@@ -262,7 +262,9 @@ const KQLLibrary = () => {
         
         // Combine all results into a single array
         results.forEach(categoryQueries => {
-          allQueries.push(...categoryQueries);
+          if (Array.isArray(categoryQueries)) {
+            allQueries.push(...categoryQueries);
+          }
         });
         
         setQueries(allQueries);
