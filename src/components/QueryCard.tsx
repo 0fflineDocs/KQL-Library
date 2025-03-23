@@ -26,7 +26,7 @@ const QueryCard = ({ query }: QueryCardProps) => {
   };
 
   return (
-    <Card className="border-gray-800 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 bg-[#1e1e2e] flex flex-col h-full transform hover:-translate-y-1 overflow-hidden">
+    <Card className="border-gray-800 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 bg-[#1e1e2e] flex flex-col h-full transform overflow-hidden">
       <div className="bg-gray-800 py-3 px-4 flex justify-between items-center">
         <div>
           <h3 className="text-base font-semibold text-[#50fa7b]">
