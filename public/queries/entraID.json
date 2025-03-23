@@ -24,3 +24,44 @@
     ]
   }
 ]
+[
+  {
+    "title": "Guest Sign-ins",
+    "description": "List all sign-ins by guest users",
+    "query": "SigninLogs | where UserType == \"Guest\"",
+    "category": "Entra ID",
+    "subCategory": "Guests",
+    "tags": [
+      "signin",
+      "guest",
+      "user"
+    ]
+  },
+  {
+    "title": "Guest Invites",
+    "description": "All Guest Invites",
+    "query": "let timerange=180d;
+let timeframe=7d;
+AuditLogs
+| where TimeGenerated > ago (timerange)
+| where OperationName in ("Redeem external user invite", "Invite external user")
+| summarize
+    InvitesSent=countif(OperationName == "Invite external user"),
+    InvitesRedeemed=countif(OperationName == "Redeem external user invite")
+    by bin(TimeGenerated, timeframe)
+| render columnchart
+    with (
+    title="Guest Invites Sent v Guest Invites Redeemed",
+    xtitle="Invites",
+    kind=unstacked)
+ ",
+    "category": "Defender for Identity",
+    "subCategory": "Dormant Accounts",
+    "tags": [
+      "inactive",
+      "identity",
+      "account"
+    ]
+  }
+]
+
