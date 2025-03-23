@@ -156,13 +156,13 @@ const KQLLibrary = () => {
         setSelectedSubCategory={setSelectedSubCategory} 
       />
 
-      {/* Query Cards */}
+       {/* Query Cards */}
       <div 
         className="flex-1 overflow-y-auto p-4 bg-gray-950" 
         ref={contentRef}
       >
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
             {isLoading ? (
               <div className="col-span-full text-center text-gray-400 py-8">
                 Loading queries...
