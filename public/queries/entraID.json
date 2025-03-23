@@ -1,26 +1,365 @@
 [
   {
-    "title": "Guest Sign-ins",
-    "description": "List all sign-ins by guest users",
-    "query": "SigninLogs \n| where UserType == \"Guest\"",
+    "title": "Member vs Guest Application Signins",
+    "description": "Creates a list of your applications and summarizes successful signins by members vs guests",
+    "query": "let timerange=30d;\nSigninLogs\n| where TimeGenerated > ago(timerange)\n| project TimeGenerated, UserType, ResultType, AppDisplayName\n| where ResultType == 0\n| summarize\n    MemberSignins=countif(UserType == \"Member\"),\n    GuestSignins=countif(UserType == \"Guest\")\n    by AppDisplayName\n| sort by AppDisplayName",
     "category": "Entra ID",
-    "subCategory": "Guests",
+    "subCategory": "Applications",
     "tags": [
       "signin",
+      "application",
       "guest",
-      "user"
+      "member"
     ]
   },
   {
-    "title": "Dormant Accounts",
-    "description": "Users with no sign-in in 90 days",
-    "query": "SigninLogs\n| summarize count() by UserPrincipalName \n| where count_ == 0",
-    "category": "Defender for Identity",
-    "subCategory": "Dormant Accounts",
+    "title": "Application Sign-in Statistics",
+    "description": "Shows total sign-ins to each application vs distinct sign-ins",
+    "query": "SigninLogs\n| where TimeGenerated > ago(30d)\n| where ResultType == 0\n| summarize ['Total Signins']=count(), ['Distinct User Signins']=dcount(UserPrincipalName) by AppDisplayName | sort by ['Distinct User Signins'] desc",
+    "category": "Entra ID",
+    "subCategory": "Applications",
     "tags": [
-      "inactive",
-      "identity",
-      "account"
+      "signin",
+      "application",
+      "statistics"
+    ]
+  },
+  {
+    "title": "Application Usage by User Type",
+    "description": "Breaks down application usage by member vs guest users",
+    "query": "SigninLogs\n| where TimeGenerated > ago(30d)\n| where ResultType == 0\n| summarize ['Distinct Member Signins']=dcountif(UserPrincipalName, UserType == \"Member\"), ['Distinct Guest Signins']=dcountif(UserPrincipalName, UserType == \"Guest\")  by AppDisplayName | sort by ['Distinct Guest Signins']",
+    "category": "Entra ID",
+    "subCategory": "Applications",
+    "tags": [
+      "signin",
+      "application",
+      "guest",
+      "member"
+    ]
+  },
+  {
+    "title": "Service Principals Created by New Users",
+    "description": "Identifies service principals created by recently added user accounts",
+    "query": "let NewUsers = AuditLogs\n    | where OperationName == \"Add user\"\n    | extend UserID = tostring(TargetResources[0].id)\n    | project NewUser = TargetResources[0].userPrincipalName, UserID, UserCreated = TimeGenerated;\nlet NewServicePrincipals = AuditLogs\n    | where OperationName == \"Add service principal\"\n    | project ServicePrincipalDisplayName = TargetResources[0].displayName, ServicePrincipalCreated = TimeGenerated, InitiatedBy = InitiatedBy.user.userPrincipalName;\nNewServicePrincipals\n    | extend InitiatedBy = tostring(InitiatedBy)\n    | join kind=inner (\n        NewUsers\n        | extend NewUser = tostring(NewUser)\n    ) on $left.InitiatedBy == $right.NewUser\n    | project ServicePrincipalDisplayName, ServicePrincipalCreated, InitiatedBy, UserCreated, UserID\n    | order by ServicePrincipalCreated",
+    "category": "Entra ID",
+    "subCategory": "Applications",
+    "tags": [
+      "service principal",
+      "new user",
+      "security"
+    ]
+  },
+  {
+    "title": "Roles Added to Service Principals",
+    "description": "Monitors role assignments to service principals",
+    "query": "AuditLogs\n| where TimeGenerated > ago(60d)\n| where OperationName == \"Add member to role\"\n| extend ServicePrincipalType = tostring(TargetResources[0].type)\n| extend ServicePrincipalObjectId = tostring(TargetResources[0].id)\n| extend RoleAdded = tostring(parse_json(tostring(parse_json(tostring(TargetResources[0].modifiedProperties))[1].newValue)))\n| extend ServicePrincipalName = tostring(TargetResources[0].displayName)\n| extend Actor = tostring(parse_json(tostring(InitiatedBy.user)).userPrincipalName)\n| extend ActorIPAddress = tostring(parse_json(tostring(InitiatedBy.user)).ipAddress)\n| where ServicePrincipalType == \"ServicePrincipal\"\n| project TimeGenerated, OperationName, RoleAdded, ServicePrincipalName, ServicePrincipalObjectId, Actor, ActorIPAddress",
+    "category": "Entra ID",
+    "subCategory": "Applications",
+    "tags": [
+      "service principal",
+      "roles",
+      "security"
+    ]
+  },
+  {
+    "title": "API Permissions Added to Service Principals",
+    "description": "Monitors API permissions granted to service principals",
+    "query": "AuditLogs\n| where TimeGenerated > ago(60d)\n| where OperationName == \"Add app role assignment to service principal\"\n| extend AppRoleAdded = tostring(parse_json(tostring(parse_json(tostring(TargetResources[0].modifiedProperties))[1].newValue)))\n| extend ActorIPAddress = tostring(parse_json(tostring(InitiatedBy.user)).ipAddress)\n| extend Actor = tostring(parse_json(tostring(InitiatedBy.user)).userPrincipalName)\n| extend ServicePrincipalObjectId = tostring(parse_json(tostring(parse_json(tostring(TargetResources[0].modifiedProperties))[3].newValue)))\n| extend ServicePrincipalName = tostring(parse_json(tostring(parse_json(tostring(TargetResources[0].modifiedProperties))[4].newValue)))\n| project TimeGenerated, OperationName, AppRoleAdded, ServicePrincipalName, ServicePrincipalObjectId,Actor, ActorIPAddress",
+    "category": "Entra ID",
+    "subCategory": "Applications",
+    "tags": [
+      "service principal",
+      "permissions",
+      "security"
+    ]
+  },
+  {
+    "title": "High Permission Application Consents",
+    "description": "Detects high privilege application permissions consented to recently",
+    "query": "let HighPermissions = dynamic([\"AppRoleAssignment.ReadWrite.All\", \"RoleManagement.ReadWrite.Directory\", \"Sites.FullControl.All\", \"Mail.ReadWrite.All\"]);\nlet detectionTime = 1d;\nAuditLogs\n| where TimeGenerated > ago(detectionTime)\n| where OperationName =~ \"Consent to application\"\n| mv-apply TargetResource = TargetResources on\n(where TargetResource.type =~ \"ServicePrincipal\"\n| extend AppDisplayName = tostring(TargetResource.displayName),\nAppClientId = tostring(TargetResource.id),\nprops = TargetResource.modifiedProperties)\n| mv-apply ConsentFull = props on\n(where ConsentFull.displayName =~ \"ConsentAction.Permissions\")\n| mv-apply AdminConsent = props on\n(where AdminConsent.displayName =~ \"ConsentContext.IsAdminConsent\")\n| parse ConsentFull with * \"ConsentType: \" GrantConsentType \", Scope: \" GrantScope1 \"]\" *\n| where ConsentFull has_any (HighPermissions)",
+    "category": "Entra ID",
+    "subCategory": "Applications",
+    "tags": [
+      "consent",
+      "permissions",
+      "security"
+    ]
+  },
+  {
+    "title": "Conditional Access Policy Audit",
+    "description": "Shows audit logs for conditional access policy changes",
+    "query": "AuditLogs \n| where Category == \"Policy\"\n| project  ActivityDateTime, ActivityDisplayName , TargetResources[0].displayName, InitiatedBy.user.userPrincipalName",
+    "category": "Entra ID",
+    "subCategory": "Conditional Access",
+    "tags": [
+      "conditional access",
+      "policy",
+      "audit"
+    ]
+  },
+  {
+    "title": "Successful Conditional Access Authentications",
+    "description": "Lists all authentications that successfully passed conditional access",
+    "query": "SigninLogs\n| where ConditionalAccessStatus == \"success\"\n| project AppDisplayName, Identity, ConditionalAccessStatus",
+    "category": "Entra ID",
+    "subCategory": "Conditional Access",
+    "tags": [
+      "conditional access",
+      "authentication",
+      "success"
+    ]
+  },
+  {
+    "title": "Conditional Access Policy Results",
+    "description": "Shows policies that have neither success nor failure results",
+    "query": "SigninLogs\n| where TimeGenerated > ago (30d)\n| project TimeGenerated, ConditionalAccessPolicies\n| mv-expand ConditionalAccessPolicies\n| extend CAResult = tostring(ConditionalAccessPolicies.result)\n| extend CAPolicyName = tostring(ConditionalAccessPolicies.displayName)\n| summarize CAResults=make_set(CAResult) by CAPolicyName\n| where CAResults !has \"success\" and CAResults !has \"failure\"",
+    "category": "Entra ID",
+    "subCategory": "Conditional Access",
+    "tags": [
+      "conditional access",
+      "policy",
+      "monitoring"
+    ]
+  },
+  {
+    "title": "Conditional Access Failures",
+    "description": "Summarizes conditional access policy failures by reason",
+    "query": "SigninLogs\n| where TimeGenerated > ago (30d)\n| project TimeGenerated, ConditionalAccessPolicies, ResultType, ResultDescription\n| mv-expand ConditionalAccessPolicies\n| extend CAResult = tostring(ConditionalAccessPolicies.result)\n| extend CAPolicyName = tostring(ConditionalAccessPolicies.displayName)\n| where CAResult == \"failure\"\n| summarize CAFailureCount=count()by CAPolicyName, ResultType, ResultDescription\n| sort by CAFailureCount desc",
+    "category": "Entra ID",
+    "subCategory": "Conditional Access",
+    "tags": [
+      "conditional access",
+      "failure",
+      "troubleshooting"
+    ]
+  },
+  {
+    "title": "Conditional Access Failures Over Time",
+    "description": "Visualizes conditional access failures over time",
+    "query": "let start = now(-90d);\nlet end = now();\nlet timeframe= 12h;\nSigninLogs\n| project TimeGenerated, ResultType, ConditionalAccessPolicies\n| where ResultType == 53003\n| extend FailedPolicy = tostring(ConditionalAccessPolicies[0].displayName)\n| make-series FailureCount = count() default=0 on TimeGenerated in range(start,end, timeframe) by FailedPolicy\n| render timechart",
+    "category": "Entra ID",
+    "subCategory": "Conditional Access",
+    "tags": [
+      "conditional access",
+      "failure",
+      "visualization"
+    ]
+  },
+  {
+    "title": "Conditional Access Failure Reasons",
+    "description": "Details the reasons for conditional access failures",
+    "query": "SigninLogs\n| where TimeGenerated > ago (30d)\n| project TimeGenerated, ConditionalAccessPolicies, ResultType, ResultDescription\n| mv-expand ConditionalAccessPolicies\n| extend CAResult = tostring(ConditionalAccessPolicies.result)\n| extend CAPolicyName = tostring(ConditionalAccessPolicies.displayName)\n| where CAResult == \"failure\"\n| summarize CAFailureCount=count()by CAPolicyName, ResultType, ResultDescription\n| sort by CAFailureCount desc",
+    "category": "Entra ID",
+    "subCategory": "Conditional Access",
+    "tags": [
+      "conditional access",
+      "failure",
+      "troubleshooting"
+    ]
+  },
+  {
+    "title": "Conditional Access Policy Outcome Pivot",
+    "description": "Creates a pivot table showing all conditional access policy outcomes",
+    "query": "SigninLogs\n| where TimeGenerated > ago(30d)\n| extend CA = parse_json(ConditionalAccessPolicies)\n| mv-expand bagexpansion=array CA\n| evaluate bag_unpack(CA)\n| extend\n    ['CA Outcome']=tostring(column_ifexists('result', \"\")),\n    ['CA Policy Name'] = column_ifexists('displayName', \"\")\n| evaluate pivot(['CA Outcome'], count(), ['CA Policy Name'])",
+    "category": "Entra ID",
+    "subCategory": "Conditional Access",
+    "tags": [
+      "conditional access",
+      "policy",
+      "visualization"
+    ]
+  },
+  {
+    "title": "Unused Conditional Access Policies",
+    "description": "Identifies conditional access policies with no success or failure hits",
+    "query": "SigninLogs\n| where TimeGenerated > ago (30d)\n| project TimeGenerated, ConditionalAccessPolicies\n| mv-expand ConditionalAccessPolicies\n| extend CAResult = tostring(ConditionalAccessPolicies.result)\n| extend ['Conditional Access Policy Name'] = tostring(ConditionalAccessPolicies.displayName)\n| summarize ['Conditional Access Result']=make_set(CAResult) by ['Conditional Access Policy Name']\n| where ['Conditional Access Result'] !has \"success\"\n    and ['Conditional Access Result'] !has \"failure\"\n    and ['Conditional Access Result'] !has \"unknownFutureValue\"\n| sort by ['Conditional Access Policy Name'] asc",
+    "category": "Entra ID",
+    "subCategory": "Conditional Access",
+    "tags": [
+      "conditional access",
+      "policy",
+      "optimization"
+    ]
+  },
+  {
+    "title": "Sign-ins Without MFA from Unknown Networks",
+    "description": "Finds sign-ins from unknown networks that don't require MFA",
+    "query": "SigninLogs\n| where AuthenticationRequirement != \"multiFactorAuthentication\"\n| where HomeTenantId == ResourceTenantId\n| where tostring(NetworkLocationDetails) == \"[]\"\n| where ResultType == 0\n| where ConditionalAccessStatus == \"success\"\n| where todynamic(AuthenticationDetails)[0].authenticationMethod != \"Windows Hello for Business\"\n| where AppDisplayName != \"Microsoft Intune Company Portal\"\n| where AppDisplayName != \"Microsoft Intune Web Company Portal\"\n| where AppDisplayName != \"Microsoft Office Web Apps Service\"\n| where AppDisplayName != \"Microsoft Account Controls V2\"\n| where ResourceDisplayName != \"Microsoft Intune Enrollment\"\n| project UserPrincipalName, UserId, AppDisplayName, ResourceDisplayName, NetworkLocationDetails, AuthenticationRequirement\n| summarize count() by UserPrincipalName, AppDisplayName, ResourceDisplayName, AuthenticationRequirement\n| sort by UserPrincipalName asc, count_ desc",
+    "category": "Entra ID",
+    "subCategory": "Conditional Access",
+    "tags": [
+      "conditional access",
+      "MFA",
+      "security",
+      "network"
+    ]
+  },
+  {
+    "title": "Global Admin Sign-ins",
+    "description": "Monitors sign-ins by global administrators to cloud applications",
+    "query": "SigninLogs\n| where TimeGenerated > ago(1d)\n| where ResultType == 0\n| join kind=inner (IdentityInfo)\n    on $left.UserId == $right.AccountObjectId\n| where AssignedRoles contains \"Global Administrator\"\n| sort by TimeGenerated\n| summarize SignIns=count() by GlobalAdminUpn=UserPrincipalName, GlobalAdminId=UserId, Application=AppDisplayName\n| order by GlobalAdminId asc",
+    "category": "Entra ID",
+    "subCategory": "Governance",
+    "tags": [
+      "global admin",
+      "privileged account",
+      "security"
+    ]
+  },
+  {
+    "title": "Guest Last Sign-in by Month",
+    "description": "Shows month by month breakdown of when Entra ID Guests signed in",
+    "query": "SigninLogs\n| where TimeGenerated > ago (360d)\n| where UserType == \"Guest\" or UserPrincipalName contains \"#ext#\"\n| where ResultType == 0\n| summarize arg_max(TimeGenerated, *) by UserPrincipalName\n| project TimeGenerated, UserPrincipalName\n| summarize InactiveUsers=make_set(UserPrincipalName) by startofmonth(TimeGenerated)",
+    "category": "Entra ID",
+    "subCategory": "Guests",
+    "tags": [
+      "guest",
+      "signin",
+      "external user"
+    ]
+  },
+  {
+    "title": "Guest Authentication Requirements",
+    "description": "Lists all guests and whether they use single or multi-factor authentication",
+    "query": "SigninLogs\n| where UserType == 'Guest'\n| project UserPrincipalName, UserType, ClientAppUsed, AuthenticationRequirement, MfaDetail, ConditionalAccessStatus\n| summarize by UserPrincipalName, AuthenticationRequirement, UserType",
+    "category": "Entra ID",
+    "subCategory": "Guests",
+    "tags": [
+      "guest",
+      "MFA",
+      "authentication"
+    ]
+  },
+  {
+    "title": "Guest Invites Sent vs Redeemed",
+    "description": "Visualizes the total amount of guest invites sent versus those redeemed",
+    "query": "let timerange=180d;\nlet timeframe=7d;\nAuditLogs\n| where TimeGenerated > ago (timerange)\n| where OperationName in (\"Redeem external user invite\", \"Invite external user\")\n| summarize\n    InvitesSent=countif(OperationName == \"Invite external user\"),\n    InvitesRedeemed=countif(OperationName == \"Redeem external user invite\")\n    by bin(TimeGenerated, timeframe)\n| render columnchart\n    with (\n    title=\"Guest Invites Sent v Guest Invites Redeemed\",\n    xtitle=\"Invites\",\n    kind=unstacked)",
+    "category": "Entra ID",
+    "subCategory": "Guests",
+    "tags": [
+      "guest",
+      "invite",
+      "external user"
+    ]
+  },
+  {
+    "title": "Unredeemed Guest Invites",
+    "description": "Lists guests who have been invited but not yet redeemed their invites (excludes recent invites)",
+    "query": "let timerange=180d;\nlet timeframe=30d;\nAuditLogs\n| where TimeGenerated between (ago(timerange) .. ago(timeframe)) \n| where OperationName == \"Invite external user\"\n| extend GuestUPN = tolower(tostring(TargetResources[0].userPrincipalName))\n| project TimeGenerated, GuestUPN\n| join kind=leftanti  (\n    AuditLogs\n    | where TimeGenerated > ago (timerange)\n    | where OperationName == \"Redeem external user invite\"\n    | where CorrelationId <> \"00000000-0000-0000-0000-000000000000\"\n    | extend d = tolower(tostring(TargetResources[0].displayName))\n    | parse d with * \"upn: \" GuestUPN \",\" *\n    | project TimeGenerated, GuestUPN)\n    on GuestUPN\n| distinct GuestUPN",
+    "category": "Entra ID",
+    "subCategory": "Guests",
+    "tags": [
+      "guest",
+      "invite",
+      "external user"
+    ]
+  },
+  {
+    "title": "Newly Registered Devices",
+    "description": "Lists newly registered Entra ID devices with detailed information",
+    "query": "let NewDevices = AuditLogs\n    | where OperationName == \"Register device\"\n    | project TimeGenerated, DeviceID=AdditionalDetails[4].value, OS=AdditionalDetails[3].value, DeviceTrustType=AdditionalDetails[2].value, InitiatedBy=InitiatedBy.user.userPrincipalName;\nlet DisplayNames = AuditLogs\n    | where OperationName == \"Add device\"\n    | extend Replaced=replace_string(tostring(TargetResources[0].modifiedProperties[6].newValue), '[\\\"', '')\n    | project DeviceID=replace_string(Replaced, '\\\"\\]', ''), DeviceName=TargetResources[0].displayName;\nNewDevices\n    | extend DeviceID = tostring(DeviceID)\n    | join kind=inner (\n        DisplayNames\n        | extend DeviceID = tostring(DeviceID)\n    ) on $left.DeviceID == $right.DeviceID\n    | summarize by TimeGenerated, DeviceID, tostring(DeviceName), tostring(OS), tostring(DeviceTrustType), tostring(InitiatedBy)\n    | order by TimeGenerated",
+    "category": "Entra ID",
+    "subCategory": "Devices",
+    "tags": [
+      "device",
+      "registration",
+      "monitoring"
+    ]
+  },
+  {
+    "title": "Password vs Passwordless Sign-ins",
+    "description": "Compares password-based to passwordless sign-ins per week",
+    "query": "let timerange=180d;\nSigninLogs\n| project TimeGenerated, AuthenticationDetails\n| where TimeGenerated > ago (timerange)\n| extend AuthMethod = tostring(parse_json(AuthenticationDetails)[0].authenticationMethod)\n| where AuthMethod != \"Previously satisfied\"\n| summarize\n    Password=countif(AuthMethod == \"Password\"),\n    Passwordless=countif(AuthMethod in (\"FIDO2 security key\", \"Passwordless phone sign-in\", \"Windows Hello for Business\", \"Mobile app notification\",\"X.509 Certificate\")) \n    by startofweek(TimeGenerated)\n| render timechart with ( xtitle=\"Week\", ytitle=\"Signin Count\", title=\"Password vs Passwordless signins per week\")",
+    "category": "Entra ID",
+    "subCategory": "Authentication",
+    "tags": [
+      "passwordless",
+      "authentication",
+      "modern auth"
+    ]
+  },
+  {
+    "title": "Passwordless Authentication Methods",
+    "description": "Breaks down passwordless authentication methods used per week",
+    "query": "let timerange=180d;\nSigninLogs\n| project TimeGenerated, AuthenticationDetails\n| where TimeGenerated > ago (timerange)\n| extend AuthMethod = tostring(parse_json(AuthenticationDetails)[0].authenticationMethod)\n| where AuthMethod in (\"FIDO2 security key\", \"Passwordless phone sign-in\", \"Windows Hello for Business\", \"Mobile app notification\",\"X.509 Certificate\")\n| summarize ['Passwordless Method']=count()by AuthMethod, startofweek(TimeGenerated)\n| render timechart with ( xtitle=\"Week\", ytitle=\"Signin Count\", title=\"Passwordless methods per week\")",
+    "category": "Entra ID", 
+    "subCategory": "Authentication",
+    "tags": [
+      "passwordless",
+      "authentication",
+      "modern auth"
+    ]
+  },
+  {
+    "title": "MFA Usage by Application",
+    "description": "Shows percentage of sign-ins that use MFA by application",
+    "query": "let timerange=30d;\nSigninLogs\n| where TimeGenerated > ago(timerange)\n| where ResultType == 0\n| summarize\n    TotalCount=count(),\n    MFACount=countif(AuthenticationRequirement == \"multiFactorAuthentication\"),\n    nonMFACount=countif(AuthenticationRequirement == \"singleFactorAuthentication\")\n    by AppDisplayName\n| project AppDisplayName, TotalCount, MFACount, nonMFACount, MFAPercentage=(todouble(MFACount) * 100 / todouble(TotalCount))\n| sort by MFAPercentage desc",
+    "category": "Entra ID",
+    "subCategory": "Authentication",
+    "tags": [
+      "MFA",
+      "authentication",
+      "application"
+    ]
+  },
+  {
+    "title": "Security Info Registration Changes",
+    "description": "Monitors when users register or delete security information",
+    "query": "AuditLogs\n| where OperationName == \"User registered security info\" or OperationName == \"User deleted security info\"\n| where TimeGenerated between (datetime(\"2023-09-01 00:00\") .. datetime(\"2023-09-07 00:00\"))\n| extend userPrincipalName_ = tostring(parse_json(tostring(InitiatedBy.user)).userPrincipalName)\n| project TimeGenerated,userPrincipalName_,ResultDescription,Result",
+    "category": "Entra ID",
+    "subCategory": "Authentication Methods",
+    "tags": [
+      "authentication",
+      "security info",
+      "MFA"
+    ]
+  },
+  {
+    "title": "Authentication Method Configuration Changes",
+    "description": "Tracks changes to Entra ID authentication methods configuration",
+    "query": "AuditLogs\n| where OperationName in (\"Authentication Methods Policy Reset\", \"Authentication Methods Policy Update\", \"Authentication Strength Combination Configuration Create\", \"Authentication Strength Combination Configuration Delete\", \"Authentication Strength Combination Configuration Update\", \"Authentication Strength Policy Create\", \"Authentication Strength Policy Delete\", \"Authentication Strength Policy Update\", \"Disable Strong Authentication\", \"Update the company default cross-tenant access setting\", \"Update security defaults\", \"Update authorization policy\", \"Update Sign-In Risk Policy\", \"Set password policy\", \"Set domain authentication\", \"Set device registration policies\", \"Reveal local administrator password\", \"Reset the cross-tenant access default setting\")\n| project TimeGenerated, OperationName, InitiatedByUpn=InitiatedBy.user.userPrincipalName, InitiatedById=InitiatedBy.user.id, TargetResources\n| order by TimeGenerated desc",
+    "category": "Entra ID",
+    "subCategory": "Authentication Methods",
+    "tags": [
+      "authentication",
+      "configuration",
+      "audit"
+    ]
+  },
+  {
+    "title": "Shared Phone Numbers",
+    "description": "Identifies phone numbers registered for multiple users",
+    "query": "AuditLogs\n| where TimeGenerated > ago (30d)\n| where Result == \"success\"\n| where Identity == \"Azure Credential Configuration Endpoint Service\"\n| where OperationName == \"Update user\"\n| extend UserPrincipalName = tostring(TargetResources[0].userPrincipalName)\n| extend PhoneNumber = tostring(parse_json(tostring(parse_json(tostring(TargetResources[0].modifiedProperties))[1].newValue))[0].PhoneNumber)\n| where isnotempty(PhoneNumber)\n| summarize Users=make_set(UserPrincipalName) by PhoneNumber\n| extend CountofUsers=array_length(Users)\n| where CountofUsers > 1",
+    "category": "Entra ID",
+    "subCategory": "Authentication Methods",
+    "tags": [
+      "phone",
+      "MFA",
+      "security"
+    ]
+  },
+  {
+    "title": "New Role Assignments",
+    "description": "Finds new role assignments not made through PIM",
+    "query": "AuditLogs\n| where TimeGenerated > ago(60d)\n| where OperationName contains \"Add member to role\"\n| where Identity != \"MS-PIM\"\n| where LoggedByService != \"PIM\"",
+    "category": "Entra ID",
+    "subCategory": "Roles",
+    "tags": [
+      "roles",
+      "permissions",
+      "security"
+    ]
+  },
+  {
+    "title": "New Users Added to Roles",
+    "description": "Detects when newly created users are assigned to administrative roles",
+    "query": "let NewUsers = AuditLogs\n    | where ActivityDisplayName == \"Add user\"\n    | extend UserID = tostring(TargetResources[0].id);\nlet NewAdmins = AuditLogs\n    | where ActivityDisplayName == \"Add member to role\"\n    | extend UserID = tostring(TargetResources[0].id);\nNewUsers\n    | join (NewAdmins) on UserID\n    | project UserCreatedTimestamp=TimeGenerated, UserPrincipalName=tostring(TargetResources[0].userPrincipalName), UserID, AdminRoleAddedTimestamp=TimeGenerated1, AdminRole=tostring(TargetResources1[0].modifiedProperties[1].newValue), InitiatedBy=tostring(InitiatedBy1.user.userPrincipalName)",
+    "category": "Entra ID",
+    "subCategory": "Roles",
+    "tags": [
+      "roles",
+      "new user",
+      "security"
     ]
   }
-]
+  ]
