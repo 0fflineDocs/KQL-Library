@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Github, List } from "lucide-react";
+import React, { useState, useEffect, useRef } from 'react';
+import { Github, List, Search, Mail, Clock, Users } from "lucide-react";
 
 // Inline the cn utility function
 const cn = (...classes: (string | undefined | null | false)[]) => {
@@ -71,6 +71,59 @@ const CopyButton = ({ text, className = "" }) => {
   );
 };
 
+// Search Modal component
+const SearchModal = ({ isOpen, onClose, onSearch, searchTerm, setSearchTerm }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+          onClose();
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center pt-20 z-50">
+      <div 
+        ref={modalRef}
+        className="w-full max-w-xl bg-gray-900 border border-gray-800 rounded-lg shadow-xl"
+      >
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Search className="w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search queries, tags, descriptions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-gray-800 border-0 rounded px-3 py-2 text-white placeholder:text-gray-400 focus:ring-1 focus:ring-[#8be9fd] focus:outline-none"
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end">
+            <button 
+              className="text-sm px-4 py-1.5 rounded bg-gray-800 hover:bg-gray-700 text-gray-300"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Inline component imports to avoid path issues
 // Button component
 const Button = ({ 
@@ -136,21 +189,6 @@ const CardContent = ({ className = "", children, ...props }: any) => (
   </div>
 );
 
-// ScrollArea component
-const ScrollArea = ({ className = "", children, ...props }: any) => (
-  <div className={cn("overflow-y-auto max-h-64", className)} {...props}>
-    {children}
-  </div>
-);
-
-// Input component
-const Input = ({ className = "", ...props }: any) => (
-  <input
-    className={cn("w-full px-3 py-2 rounded bg-gray-800 border border-gray-700 text-white placeholder:text-gray-400", className)}
-    {...props}
-  />
-);
-
 interface Query {
   title: string;
   description: string;
@@ -168,6 +206,8 @@ const KQLLibrary = () => {
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const categories = [
     "Entra ID", "Defender for Identity", "Defender for Endpoint",
@@ -280,28 +320,32 @@ const KQLLibrary = () => {
     return searchMatch && categoryMatch && subCategoryMatch;
   });
 
+  // Function to determine card height based on query length
+  const getCardContentHeight = (queryText: string) => {
+    const lineCount = (queryText.match(/\n/g) || []).length + 1;
+    if (lineCount <= 1) return 'min-h-[60px]';
+    if (lineCount <= 3) return 'min-h-[100px]';
+    if (lineCount <= 5) return 'min-h-[150px]';
+    return 'min-h-[200px] max-h-[300px]';
+  };
+
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col">
-      <header className="bg-gray-900/90 backdrop-blur-md sticky top-0 z-40 border-b border-gray-800">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+    <div className="flex flex-col h-screen bg-gray-950 text-gray-100 overflow-hidden">
+      {/* Section 1: Header - Fixed */}
+      <header className="bg-gray-900 border-b border-gray-800 py-4 px-4">
+        <div className="container mx-auto flex items-center justify-between">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 text-transparent bg-clip-text">
             KQL Library
           </h1>
-          <div className="md:hidden">
-            <Button className="text-gray-400 hover:text-gray-300" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-              <List className="w-6 h-6" />
-            </Button>
-          </div>
-          <div className="hidden md:flex items-center gap-4">
-            <Input
-              type="text"
-              placeholder="Search queries..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 bg-gray-800 border-gray-700 text-gray-200 placeholder:text-gray-400"
-            />
+          <div className="flex items-center gap-4">
             <Button
-              className="text-gray-400 hover:text-gray-300 hover:bg-gray-800/50"
+              className="text-gray-400 hover:text-gray-300 p-2 rounded-full hover:bg-gray-800/50"
+              onClick={() => setIsSearchModalOpen(true)}
+            >
+              <Search className="w-5 h-5" />
+            </Button>
+            <Button
+              className="text-gray-400 hover:text-gray-300 p-2 rounded-full hover:bg-gray-800/50"
               onClick={() => window.open('https://github.com/0fflineDocs/KQL', '_blank')}
             >
               <Github className="w-5 h-5" />
@@ -310,101 +354,148 @@ const KQLLibrary = () => {
         </div>
       </header>
 
-      <main className="flex-1 p-4">
-        <div className="flex flex-wrap justify-center gap-4 mb-6">
-          {categories.map((category) => (
-            <Button
-              key={category}
-              className={cn(
-                "px-4 py-2 rounded-md font-medium",
-                categoryInfo[category]?.buttonBg,
-                selectedCategory === category
-                  ? "bg-gray-700 ring-1 ring-[#8be9fd]"
-                  : ""
-              )}
-              onClick={() => {
-                setSelectedCategory(prev => prev === category ? null : category);
-                setSelectedSubCategory(null);
-              }}
-            >
-              <span className="text-[#bd93f9]">
-                {categoryInfo[category]?.displayName || category}
-              </span>
-            </Button>
-          ))}
-        </div>
-
-        {selectedCategory && categoryInfo[selectedCategory]?.subCategories?.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-4 mb-6">
-            {categoryInfo[selectedCategory].subCategories.map((subCategory: string) => (
+      {/* Section 2: Categories - Fixed */}
+      <div className="bg-gray-900/95 border-b border-gray-800 py-4">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-wrap justify-center gap-4">
+            {categories.map((category) => (
               <Button
-                key={subCategory}
+                key={category}
                 className={cn(
-                  "px-4 py-2 rounded-md bg-gray-800 hover:bg-gray-700",
-                  selectedSubCategory === subCategory
+                  "px-4 py-2 rounded-md font-medium",
+                  categoryInfo[category]?.buttonBg,
+                  selectedCategory === category
                     ? "bg-gray-700 ring-1 ring-[#8be9fd]"
                     : ""
                 )}
-                onClick={() => setSelectedSubCategory(prev => prev === subCategory ? null : subCategory)}
+                onClick={() => {
+                  setSelectedCategory(prev => prev === category ? null : category);
+                  setSelectedSubCategory(null);
+                }}
               >
-                <span className="text-[#ff79c6]">{subCategory}</span>
+                <span className="text-[#bd93f9]">
+                  {categoryInfo[category]?.displayName || category}
+                </span>
               </Button>
             ))}
           </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-y-6">
-          {isLoading ? (
-            <div className="col-span-full text-center text-gray-400 py-8">
-              Loading queries...
-            </div>
-          ) : loadingError ? (
-            <div className="col-span-full text-center text-red-400 py-8">
-              {loadingError}
-            </div>
-          ) : filteredQueries.length === 0 ? (
-            <div className="col-span-full text-center text-gray-400 py-8">
-              No queries found matching your search.
-            </div>
-          ) : (
-            filteredQueries.map((query, index) => (
-              <Card 
-                key={index} 
-                className="border-gray-800 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 bg-gray-900/90 backdrop-blur-md flex flex-col transform hover:-translate-y-1"
-              >
-                <CardHeader className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-t-lg border-b border-gray-800">
-                  <CardTitle className="text-lg font-semibold text-[#50fa7b]">
-                    {query.title}
-                  </CardTitle>
-                  <CardDescription className="text-[#ffb86c]">
-                    {query.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <ScrollArea className="h-full w-full rounded-md border border-gray-800 bg-gray-950 mt-2">
-                    <pre className="p-4 px-6 text-xs text-gray-200 whitespace-pre-wrap break-words">
-                      <code>{query.query}</code>
-                    </pre>
-                  </ScrollArea>
-                  <div className="mt-4 flex flex-wrap gap-2 justify-between items-center">
-                    <div className="flex flex-wrap gap-2">
-                      {query.tags && query.tags.length > 0 && query.tags.map((tag, i) => (
-                        <span 
-                          key={i} 
-                          className="text-xs px-2 py-1 rounded-full bg-gray-800 text-[#8be9fd]"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <CopyButton text={query.query} />
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
         </div>
-      </main>
+      </div>
+
+      {/* Section 3: Subcategories - Fixed (only visible when a category is selected) */}
+      {selectedCategory && categoryInfo[selectedCategory]?.subCategories?.length > 0 && (
+        <div className="bg-gray-900/90 border-b border-gray-800 py-3">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-wrap justify-center gap-4">
+              {categoryInfo[selectedCategory].subCategories.map((subCategory: string) => (
+                <Button
+                  key={subCategory}
+                  className={cn(
+                    "px-4 py-2 rounded-md bg-gray-800 hover:bg-gray-700",
+                    selectedSubCategory === subCategory
+                      ? "bg-gray-700 ring-1 ring-[#8be9fd]"
+                      : ""
+                  )}
+                  onClick={() => setSelectedSubCategory(prev => prev === subCategory ? null : subCategory)}
+                >
+                  <span className="text-[#ff79c6]">{subCategory}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Section 4: Query Cards - Scrollable Content */}
+      <div 
+        className="flex-1 overflow-y-auto p-4 bg-gray-950" 
+        ref={contentRef}
+      >
+        <div className="container mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-y-6">
+            {isLoading ? (
+              <div className="col-span-full text-center text-gray-400 py-8">
+                Loading queries...
+              </div>
+            ) : loadingError ? (
+              <div className="col-span-full text-center text-red-400 py-8">
+                {loadingError}
+              </div>
+            ) : filteredQueries.length === 0 ? (
+              <div className="col-span-full text-center text-gray-400 py-8">
+                No queries found matching your search.
+              </div>
+            ) : (
+              filteredQueries.map((query, index) => (
+                <Card 
+                  key={index} 
+                  className="border-gray-800 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 bg-gray-900/90 backdrop-blur-md flex flex-col transform hover:-translate-y-1"
+                >
+                  <CardHeader className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-t-lg border-b border-gray-800">
+                    <CardTitle className="text-lg font-semibold text-[#50fa7b]">
+                      {query.title}
+                    </CardTitle>
+                    <CardDescription className="text-[#ffb86c]">
+                      {query.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-1">
+                    <div className={`w-full rounded-md border border-gray-800 bg-gray-950 mt-2 overflow-auto ${getCardContentHeight(query.query)}`}>
+                      <pre className="p-4 px-6 text-xs text-gray-200 whitespace-pre-wrap break-words h-full">
+                        <code>{query.query}</code>
+                      </pre>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2 justify-between items-center">
+                      <div className="flex flex-wrap gap-2">
+                        {query.tags && query.tags.length > 0 && query.tags.map((tag, i) => (
+                          <span 
+                            key={i} 
+                            className="text-xs px-2 py-1 rounded-full bg-gray-800 text-[#8be9fd]"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <CopyButton text={query.query} />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Section 5: Bottom Bar - Fixed */}
+      <footer className="bg-gray-900 border-t border-gray-800 py-2.5 px-4">
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <a href="#" className="text-gray-400 hover:text-gray-300 flex items-center gap-1.5 text-sm">
+              <Users className="w-4 h-4" />
+              <span>Contributors</span>
+            </a>
+            <a href="#" className="text-gray-400 hover:text-gray-300 flex items-center gap-1.5 text-sm">
+              <Clock className="w-4 h-4" />
+              <span>Recently Added</span>
+            </a>
+          </div>
+          <div>
+            <a href="#" className="text-gray-400 hover:text-gray-300 flex items-center gap-1.5 text-sm">
+              <Mail className="w-4 h-4" />
+              <span>Contact</span>
+            </a>
+          </div>
+        </div>
+      </footer>
+
+      {/* Search Modal */}
+      <SearchModal 
+        isOpen={isSearchModalOpen} 
+        onClose={() => setIsSearchModalOpen(false)}
+        onSearch={() => {}}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+      />
     </div>
   );
 };
