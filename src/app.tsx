@@ -150,42 +150,9 @@ const Button = ({
 // Card components
 const Card = ({ className = "", children, ...props }: any) => (
   <div
-    className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}
+    className={cn("rounded-md border bg-card text-card-foreground shadow-sm", className)}
     {...props}
   >
-    {children}
-  </div>
-);
-
-const CardHeader = ({ className = "", children, ...props }: any) => (
-  <div className={cn("flex flex-col space-y-1.5 p-6", className)} {...props}>
-    {children}
-  </div>
-);
-
-const CardTitle = ({ className = "", children, ...props }: any) => (
-  <p
-    className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
-      className
-    )}
-    {...props}
-  >
-    {children}
-  </p>
-);
-
-const CardDescription = ({ className = "", children, ...props }: any) => (
-  <p
-    className={cn("text-sm text-[#ffb86c]", className)}
-    {...props}
-  >
-    {children}
-  </p>
-);
-
-const CardContent = ({ className = "", children, ...props }: any) => (
-  <div className={cn("p-6 pt-0", className)} {...props}>
     {children}
   </div>
 );
@@ -324,10 +291,10 @@ const KQLLibrary = () => {
   // Function to determine card height based on query length
   const getCardContentHeight = (queryText: string) => {
     const lineCount = (queryText.match(/\n/g) || []).length + 1;
-    if (lineCount <= 1) return 'min-h-[60px]';
-    if (lineCount <= 3) return 'min-h-[100px]';
-    if (lineCount <= 5) return 'min-h-[150px]';
-    return 'min-h-[200px] max-h-[300px]';
+    if (lineCount <= 1) return 'min-h-[40px]';
+    if (lineCount <= 3) return 'min-h-[80px]';
+    if (lineCount <= 5) return 'min-h-[120px]';
+    return 'min-h-[180px] max-h-[280px]';
   };
 
   return (
@@ -413,7 +380,7 @@ const KQLLibrary = () => {
         ref={contentRef}
       >
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {isLoading ? (
               <div className="col-span-full text-center text-gray-400 py-8">
                 Loading queries...
@@ -430,26 +397,26 @@ const KQLLibrary = () => {
               filteredQueries.map((query, index) => (
                 <Card 
                 key={index} 
-                className="border-gray-800 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 bg-gray-900 flex flex-col transform hover:-translate-y-1"
+                className="border-gray-800 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 bg-[#1e1e2e] flex flex-col transform hover:-translate-y-1 overflow-hidden"
               >
-                <CardHeader className="bg-gray-900 rounded-t-lg border-b border-gray-800">
-                  <CardTitle className="text-lg font-semibold text-[#50fa7b]">
-                    {query.title}
-                  </CardTitle>
-                  <CardDescription className="text-[#ffb86c]">
-                    {query.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <div className={`w-full rounded-md border border-gray-800 bg-[#1e1e2e] mt-2 overflow-auto ${getCardContentHeight(query.query)}`}>
-                    <pre className="p-4 px-6 text-xs text-gray-200 whitespace-pre-wrap break-words h-full">
+                <div className="bg-gray-800 py-3 px-4 flex justify-between items-center">
+                  <div>
+                    <h3 className="text-base font-semibold text-[#50fa7b]">
+                      {query.title}
+                    </h3>
+                    <p className="text-xs text-[#ffb86c]">
+                      {query.description}
+                    </p>
+                  </div>
+                  <CopyButton text={query.query} />
+                </div>
+                <div className="flex-1 p-0">
+                  <div className={`w-full bg-[#1e1e2e] overflow-auto ${getCardContentHeight(query.query)}`}>
+                    <pre className="p-3 text-xs text-gray-200 whitespace-pre-wrap break-words h-full">
                       <code>{query.query}</code>
                     </pre>
                   </div>
-                  <div className="mt-4 flex justify-end items-center">
-                    <CopyButton text={query.query} />
-                  </div>
-                </CardContent>
+                </div>
               </Card>
               ))
             )}
