@@ -24,11 +24,12 @@ const CopyButton = ({ text, className = "" }) => {
     <button
       onClick={handleCopy}
       className={cn(
-        "text-xs flex items-center gap-1 px-2 py-1 rounded-full transition-all duration-300",
+        "text-xs flex items-center gap-1 px-2 py-1 rounded-full transition-colors duration-300",
         "bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-[#8be9fd]",
         copied ? "text-[#50fa7b]" : "text-[#8be9fd]",
         className
       )}
+      style={{ minWidth: '68px', justifyContent: 'center' }}
     >
       {copied ? (
         <>
@@ -357,12 +358,12 @@ const KQLLibrary = () => {
       {/* Section 2: Categories - Fixed */}
       <div className="bg-gray-900/95 border-b border-gray-800 py-4">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-2">
             {categories.map((category) => (
               <Button
                 key={category}
                 className={cn(
-                  "px-4 py-2 rounded-md font-medium",
+                  "px-3 py-2 rounded-md font-medium",
                   categoryInfo[category]?.buttonBg,
                   selectedCategory === category
                     ? "bg-gray-700 ring-1 ring-[#8be9fd]"
@@ -386,12 +387,12 @@ const KQLLibrary = () => {
       {selectedCategory && categoryInfo[selectedCategory]?.subCategories?.length > 0 && (
         <div className="bg-gray-900/90 border-b border-gray-800 py-3">
           <div className="container mx-auto px-4">
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-2">
               {categoryInfo[selectedCategory].subCategories.map((subCategory: string) => (
                 <Button
                   key={subCategory}
                   className={cn(
-                    "px-4 py-2 rounded-md bg-gray-800 hover:bg-gray-700",
+                    "px-3 py-2 rounded-md bg-gray-800 hover:bg-gray-700",
                     selectedSubCategory === subCategory
                       ? "bg-gray-700 ring-1 ring-[#8be9fd]"
                       : ""
