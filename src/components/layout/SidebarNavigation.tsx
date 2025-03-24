@@ -122,14 +122,14 @@ const SidebarNavigation = ({
                         <Button
                           key={subcategory}
                           className={cn(
-                            "w-full text-left p-1.5 pl-6 text-sm rounded flex items-center",
+                            "w-full p-1.5 pl-6 text-sm rounded flex items-center justify-start",
                             selectedSubCategory === subcategory 
                               ? "bg-gray-800 text-[#ff79c6] font-medium" 
                               : "text-[#ff79c6] hover:bg-gray-800/30"
                           )}
                           onClick={() => handleSubcategorySelect(subcategory)}
                         >
-                          <span className="truncate">{subcategory}</span>
+                          <span className="truncate text-left">{subcategory}</span>
                         </Button>
                       ))}
                     </div>
@@ -141,14 +141,14 @@ const SidebarNavigation = ({
                       <Button
                         key={index}
                         className={cn(
-                          "w-full text-left p-1.5 pl-6 text-sm rounded flex items-center",
+                          "w-full p-1.5 pl-6 text-sm rounded flex items-center justify-start",
                           selectedQuery === query 
                             ? "bg-gray-800 text-[#50fa7b]" 
                             : "text-gray-300 hover:bg-gray-800/30"
                         )}
                         onClick={() => handleQuerySelect(query)}
                       >
-                        <span className="truncate">{query.title}</span>
+                        <span className="truncate text-left">{query.title}</span>
                       </Button>
                     ))
                   ) : (
