@@ -6,9 +6,8 @@ import { Query, CategoryInfo } from './types';
 
 // Import layout components
 import Header from './components/layout/Header';
-import CategoryNav from './components/layout/CategoryNav';
-import SubcategoryNav from './components/layout/SubcategoryNav';
-import QueryCard from './components/QueryCard';
+import SidebarNavigation from './components/layout/SidebarNavigation';
+import QueryDisplay from './components/QueryDisplay';
 import SearchModal from './components/SearchModal';
 
 const KQLLibrary = () => {
@@ -16,10 +15,10 @@ const KQLLibrary = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
+  const [selectedQuery, setSelectedQuery] = useState<Query | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [searchResults, setSearchResults] = useState<Query[]>([]);
 
   const categories = [
     "Entra ID", "Defender for Identity", "Defender for Endpoint",
@@ -124,73 +123,70 @@ const KQLLibrary = () => {
     fetchAllQueries();
   }, []);
 
-  const filteredQueries = queries.filter(query => {
-    const searchMatch =
-      query.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      query.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (query.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
-    const categoryMatch = !selectedCategory || query.category === selectedCategory;
-    const subCategoryMatch = !selectedSubCategory || query.subCategory === selectedSubCategory;
-    return searchMatch && categoryMatch && subCategoryMatch;
-  });
+  // Handle search
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = queries.filter(query => 
+        query.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        query.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (query.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
+      );
+      setSearchResults(filtered);
+      
+      // If we have search results, auto-select the first one
+      if (filtered.length > 0 && isSearchModalOpen) {
+        setSelectedQuery(filtered[0]);
+        setSelectedCategory(filtered[0].category);
+      }
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchTerm, queries, isSearchModalOpen]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-950 text-gray-100 overflow-hidden">
       {/* Header */}
       <Header onOpenSearch={() => setIsSearchModalOpen(true)} />
 
-      {/* Category Navigation */}
-      <CategoryNav 
-        categories={categories} 
-        categoryInfo={categoryInfo} 
-        selectedCategory={selectedCategory} 
-        setSelectedCategory={setSelectedCategory}
-        setSelectedSubCategory={setSelectedSubCategory}
-      />
+      {/* Main content area with sidebar and query display */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar navigation */}
+        <SidebarNavigation 
+          categories={categories}
+          categoryInfo={categoryInfo}
+          queries={queries}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          selectedQuery={selectedQuery}
+          setSelectedQuery={setSelectedQuery}
+        />
 
-      {/* Subcategory Navigation */}
-      <SubcategoryNav 
-        selectedCategory={selectedCategory} 
-        categoryInfo={categoryInfo} 
-        selectedSubCategory={selectedSubCategory} 
-        setSelectedSubCategory={setSelectedSubCategory} 
-      />
-
-       {/* Query Cards */}
-      <div 
-        className="flex-1 overflow-y-auto p-4 bg-gray-950" 
-        ref={contentRef}
-      >
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
-            {isLoading ? (
-              <div className="col-span-full text-center text-gray-400 py-8">
-                Loading queries...
-              </div>
-            ) : loadingError ? (
-              <div className="col-span-full text-center text-red-400 py-8">
-                {loadingError}
-              </div>
-            ) : filteredQueries.length === 0 ? (
-              <div className="col-span-full text-center text-gray-400 py-8">
-                No queries found matching your search.
-              </div>
-            ) : (
-              filteredQueries.map((query, index) => (
-                <QueryCard key={index} query={query} />
-              ))
-            )}
-          </div>
+        {/* Main content area */}
+        <div className="flex-1 overflow-hidden bg-gray-950">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-gray-400">Loading queries...</div>
+            </div>
+          ) : loadingError ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-red-400">{loadingError}</div>
+            </div>
+          ) : (
+            <QueryDisplay query={selectedQuery} />
+          )}
         </div>
       </div>
 
       {/* Search Modal */}
       <SearchModal 
-        isOpen={isSearchModalOpen} 
-        onClose={() => setIsSearchModalOpen(false)}
-        onSearch={() => {}}
+        isOpen={isSearchModalOpen}
+        onClose={() => {
+          setIsSearchModalOpen(false);
+          setSearchTerm('');
+        }}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        onSearch={() => {}}
       />
     </div>
   );
