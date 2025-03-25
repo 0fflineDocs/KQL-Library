@@ -1,4 +1,4 @@
-// src/app.tsx
+// src/app.tsx - Only updating the layout structure to accommodate the new sidebar width
 import React, { useState, useEffect, useRef } from 'react';
 
 // Import types
@@ -100,10 +100,7 @@ const KQLLibrary = () => {
           }
         });
 
-        // Wait for all fetch requests to complete
         const results = await Promise.all(fetchPromises);
-        
-        // Combine all results into a single array
         results.forEach(categoryQueries => {
           if (Array.isArray(categoryQueries)) {
             allQueries.push(...categoryQueries);
@@ -154,7 +151,7 @@ const KQLLibrary = () => {
 
       {/* Main content area with sidebar and query display */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar navigation */}
+        {/* Two-panel sidebar navigation */}
         <SidebarNavigation 
           categories={categories}
           categoryInfo={categoryInfo}
@@ -178,29 +175,4 @@ const KQLLibrary = () => {
               <div className="text-red-400">{loadingError}</div>
             </div>
           ) : (
-            <QueryDisplay query={selectedQuery} />
-          )}
-        </div>
-      </div>
-
-      {/* Enhanced Search Modal */}
-      <SearchModal 
-        isOpen={isSearchModalOpen}
-        onClose={handleCloseSearch}
-        onSearch={() => {}}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        categories={categories}
-        categoryInfo={categoryInfo}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        selectedSubCategory={selectedSubCategory}
-        setSelectedSubCategory={setSelectedSubCategory}
-        queries={queries}
-        setSelectedQuery={setSelectedQuery}
-      />
-    </div>
-  );
-};
-
-export default KQLLibrary;
+            <QueryDisplay query={
