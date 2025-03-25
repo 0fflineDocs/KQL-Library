@@ -6,8 +6,7 @@
     "category": "Entra ID",
     "subCategory": "Applications",
     "tags": [
-      "signin",
-      "application",
+      "signinlgos",
       "guest",
       "member"
     ]
@@ -19,8 +18,7 @@
     "category": "Entra ID",
     "subCategory": "Applications",
     "tags": [
-      "signin",
-      "application",
+      "signinlogs",
       "statistics"
     ]
   },
@@ -31,8 +29,7 @@
     "category": "Entra ID",
     "subCategory": "Applications",
     "tags": [
-      "signin",
-      "application",
+      "signinlogs",
       "guest",
       "member"
     ]
@@ -44,6 +41,7 @@
     "category": "Entra ID",
     "subCategory": "Applications",
     "tags": [
+      "audit logs",
       "service principal",
       "new user",
       "security"
@@ -56,6 +54,7 @@
     "category": "Entra ID",
     "subCategory": "Applications",
     "tags": [
+      "auditlogs",
       "service principal",
       "roles",
       "security"
@@ -68,8 +67,9 @@
     "category": "Entra ID",
     "subCategory": "Applications",
     "tags": [
+      "auditlogs",
       "service principal",
-      "permissions",
+      "apipermissions",
       "security"
     ]
   },
@@ -81,7 +81,7 @@
     "subCategory": "Applications",
     "tags": [
       "consent",
-      "permissions",
+      "application permissions",
       "security"
     ]
   },
@@ -105,8 +105,7 @@
     "subCategory": "Conditional Access",
     "tags": [
       "conditional access",
-      "authentication",
-      "success"
+      "authentication"
     ]
   },
   {
@@ -117,7 +116,7 @@
     "subCategory": "Conditional Access",
     "tags": [
       "conditional access",
-      "policy",
+      "governance",
       "monitoring"
     ]
   },
@@ -129,7 +128,6 @@
     "subCategory": "Conditional Access",
     "tags": [
       "conditional access",
-      "failure",
       "troubleshooting"
     ]
   },
@@ -141,7 +139,7 @@
     "subCategory": "Conditional Access",
     "tags": [
       "conditional access",
-      "failure",
+      "troubleshooting",
       "visualization"
     ]
   },
@@ -153,7 +151,6 @@
     "subCategory": "Conditional Access",
     "tags": [
       "conditional access",
-      "failure",
       "troubleshooting"
     ]
   },
@@ -165,7 +162,6 @@
     "subCategory": "Conditional Access",
     "tags": [
       "conditional access",
-      "policy",
       "visualization"
     ]
   },
@@ -177,7 +173,7 @@
     "subCategory": "Conditional Access",
     "tags": [
       "conditional access",
-      "policy",
+      "governance",
       "optimization"
     ]
   },
@@ -189,9 +185,7 @@
     "subCategory": "Conditional Access",
     "tags": [
       "conditional access",
-      "MFA",
-      "security",
-      "network"
+      "security"
     ]
   },
   {
@@ -201,7 +195,6 @@
     "category": "Entra ID",
     "subCategory": "Governance",
     "tags": [
-      "global admin",
       "privileged account",
       "security"
     ]
@@ -214,8 +207,7 @@
     "subCategory": "Guests",
     "tags": [
       "guest",
-      "signin",
-      "external user"
+      "signinlogs"
     ]
   },
   {
@@ -226,7 +218,6 @@
     "subCategory": "Guests",
     "tags": [
       "guest",
-      "MFA",
       "authentication"
     ]
   },
@@ -238,7 +229,6 @@
     "subCategory": "Guests",
     "tags": [
       "guest",
-      "invite",
       "external user"
     ]
   },
@@ -250,7 +240,6 @@
     "subCategory": "Guests",
     "tags": [
       "guest",
-      "invite",
       "external user"
     ]
   },
@@ -261,8 +250,8 @@
     "category": "Entra ID",
     "subCategory": "Devices",
     "tags": [
-      "device",
-      "registration",
+      "auditlogs",
+      "device registration",
       "monitoring"
     ]
   },
@@ -274,8 +263,7 @@
     "subCategory": "Authentication",
     "tags": [
       "passwordless",
-      "authentication",
-      "modern auth"
+      "authentication"
     ]
   },
   {
@@ -286,8 +274,7 @@
     "subCategory": "Authentication",
     "tags": [
       "passwordless",
-      "authentication",
-      "modern auth"
+      "authentication"
     ]
   },
   {
@@ -298,8 +285,7 @@
     "subCategory": "Authentication",
     "tags": [
       "MFA",
-      "authentication",
-      "application"
+      "authentication"
     ]
   },
   {
@@ -310,8 +296,7 @@
     "subCategory": "Authentication Methods",
     "tags": [
       "authentication",
-      "security info",
-      "MFA"
+      "security info registration"
     ]
   },
   {
@@ -321,21 +306,9 @@
     "category": "Entra ID",
     "subCategory": "Authentication Methods",
     "tags": [
-      "authentication",
-      "configuration",
-      "audit"
-    ]
-  },
-  {
-    "title": "Shared Phone Numbers",
-    "description": "Identifies phone numbers registered for multiple users",
-    "query": "AuditLogs\n| where TimeGenerated > ago (30d)\n| where Result == \"success\"\n| where Identity == \"Azure Credential Configuration Endpoint Service\"\n| where OperationName == \"Update user\"\n| extend UserPrincipalName = tostring(TargetResources[0].userPrincipalName)\n| extend PhoneNumber = tostring(parse_json(tostring(parse_json(tostring(TargetResources[0].modifiedProperties))[1].newValue))[0].PhoneNumber)\n| where isnotempty(PhoneNumber)\n| summarize Users=make_set(UserPrincipalName) by PhoneNumber\n| extend CountofUsers=array_length(Users)\n| where CountofUsers > 1",
-    "category": "Entra ID",
-    "subCategory": "Authentication Methods",
-    "tags": [
-      "phone",
-      "MFA",
-      "security"
+      "auditlogs",
+      "authentication method",
+      "configuration"
     ]
   },
   {
@@ -345,8 +318,8 @@
     "category": "Entra ID",
     "subCategory": "Roles",
     "tags": [
+      "PIM",
       "roles",
-      "permissions",
       "security"
     ]
   },
@@ -358,7 +331,6 @@
     "subCategory": "Roles",
     "tags": [
       "roles",
-      "new user",
       "security"
     ]
   }
