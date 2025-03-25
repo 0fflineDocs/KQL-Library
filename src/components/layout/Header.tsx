@@ -46,7 +46,7 @@ const Header = ({ onOpenSearch }: HeaderProps) => {
           
           <SocialIcon 
             type="github" 
-            href="https://github.com/0fflineDocs/KQL" 
+            href="https://github.com/0fflineDocs/" 
           />
         </div>
       </div>
