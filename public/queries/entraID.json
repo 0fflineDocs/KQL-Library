@@ -56,7 +56,7 @@
     "tags": [
       "auditlogs",
       "service principal",
-      "roles",
+      "rbac",
       "security"
     ]
   },
@@ -191,7 +191,7 @@
   {
     "title": "Global Admin Sign-ins",
     "description": "Monitors sign-ins by global administrators to cloud applications",
-    "query": "SigninLogs\n| where TimeGenerated > ago(1d)\n| where ResultType == 0\n| join kind=inner (IdentityInfo)\n    on $left.UserId == $right.AccountObjectId\n| where AssignedRoles contains \"Global Administrator\"\n| sort by TimeGenerated\n| summarize SignIns=count() by GlobalAdminUpn=UserPrincipalName, GlobalAdminId=UserId, Application=AppDisplayName\n| order by GlobalAdminId asc",
+    "query": "SigninLogs\n| where TimeGenerated > ago(1d)\n| where ResultType == 0\n| join kind=inner (IdentityInfo)\n    on $left.UserId == $right.AccountObjectId\n| where Assigned Roles contains \"Global Administrator\"\n| sort by TimeGenerated\n| summarize SignIns=count() by GlobalAdminUpn=UserPrincipalName, GlobalAdminId=UserId, Application=AppDisplayName\n| order by GlobalAdminId asc",
     "category": "Entra ID",
     "subCategory": "Governance",
     "tags": [
@@ -316,10 +316,10 @@
     "description": "Finds new role assignments not made through PIM",
     "query": "AuditLogs\n| where TimeGenerated > ago(60d)\n| where OperationName contains \"Add member to role\"\n| where Identity != \"MS-PIM\"\n| where LoggedByService != \"PIM\"",
     "category": "Entra ID",
-    "subCategory": "Roles",
+    "subCategory": "RBAC",
     "tags": [
       "PIM",
-      "roles",
+      "rbac",
       "security"
     ]
   },
@@ -328,9 +328,9 @@
     "description": "Detects when newly created users are assigned to administrative roles",
     "query": "let NewUsers = AuditLogs\n    | where ActivityDisplayName == \"Add user\"\n    | extend UserID = tostring(TargetResources[0].id);\nlet NewAdmins = AuditLogs\n    | where ActivityDisplayName == \"Add member to role\"\n    | extend UserID = tostring(TargetResources[0].id);\nNewUsers\n    | join (NewAdmins) on UserID\n    | project UserCreatedTimestamp=TimeGenerated, UserPrincipalName=tostring(TargetResources[0].userPrincipalName), UserID, AdminRoleAddedTimestamp=TimeGenerated1, AdminRole=tostring(TargetResources1[0].modifiedProperties[1].newValue), InitiatedBy=tostring(InitiatedBy1.user.userPrincipalName)",
     "category": "Entra ID",
-    "subCategory": "Roles",
+    "subCategory": "RBAC",
     "tags": [
-      "roles",
+      "rbac",
       "security"
     ]
   },
