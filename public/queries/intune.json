@@ -4,7 +4,7 @@
       "description": "Summarizes the count of corporate-owned work profile Android devices by OS version.",
       "query": "IntuneDevices\n| where OS contains \"Android (corporate-owned work profile)\"\n| summarize dcount(DeviceId) by OSVersion\n| render columnchart",
       "category": "Intune",
-      "subCategory": "Corporate-Owned Work Profile",
+      "subCategory": "Android Enterprise",
       "tags": ["android enterprise", "corporate-owned", "osversion"]
     },
     {
@@ -12,7 +12,7 @@
       "description": "Summarizes the count of fully managed Android devices by OS version.",
       "query": "IntuneDevices\n| where OS contains \"Android (fully managed)\"\n| summarize dcount(DeviceId) by OSVersion\n| render columnchart",
       "category": "Intune",
-      "subCategory": "Fully Managed",
+      "subCategory": "Android Enterprise",
       "tags": ["android enterprise", "fully managed", "osversion"]
     },
     {
@@ -20,7 +20,7 @@
       "description": "Summarizes the count of dedicated Android devices by OS version.",
       "query": "IntuneDevices\n| where OS contains \"Android (dedicated)\"\n| summarize dcount(DeviceId) by OSVersion\n| render columnchart",
       "category": "Intune",
-      "subCategory": "Dedicated",
+      "subCategory": "Android Enterprise",
       "tags": ["android enterprise", "dedicated", "osversion"]
     },
     {
@@ -28,7 +28,7 @@
       "description": "Summarizes the count of personally-owned work profile Android devices by OS version.",
       "query": "IntuneDevices\n| where OS contains \"Android (personally-owned work profile)\"\n| summarize dcount(DeviceId) by OSVersion\n| render columnchart",
       "category": "Intune",
-      "subCategory": "Personally-Owned Work Profile",
+      "subCategory": "Android Enterprise",
       "tags": ["android enterprise", "osversion"]
     },
     {
