@@ -62,7 +62,7 @@
       "category": "Intune",
       "subCategory": "Compliance",
       "tags": ["compliance", "osversion"]
-    }
+    },
     {
         "title": "Non-Compliant Devices",
         "description": "Summarizes the count of non-compliant devices by OS description and version.",
