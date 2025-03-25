@@ -63,4 +63,52 @@
       "subCategory": "Compliance",
       "tags": ["compliance", "osversion"]
     }
-  ]
+    {
+        "title": "Non-Compliant Devices",
+        "description": "Summarizes the count of non-compliant devices by OS description and version.",
+        "query": "IntuneDeviceComplianceOrg \n| where isnotempty(DeviceName)\n| where ComplianceState == \"Not compliant\"\n| summarize count() by OSDescription, OSVersion",
+        "category": "Intune",
+        "subCategory": "Compliance",
+        "tags": ["compliance", "non-compliant", "osversion"]
+      },
+      {
+        "title": "Compliance Failures by Operating System",
+        "description": "Summarizes compliance failures by operating system.",
+        "query": "let ComplianceLogs=\nIntuneOperationalLogs \n| where OperationName == \"Compliance\" \n| project TimeGenerated, Properties;\nComplianceLogs\n| sort by TimeGenerated desc\n| join (\nComplianceLogs\n| extend myJson = todynamic(Properties)\n| project-away Properties\n| extend IntuneDeviceId=tostring(myJson[\"IntuneDeviceId\"])\n| project TimeGenerated, IntuneDeviceId\n| summarize TimeGenerated=max(TimeGenerated) by IntuneDeviceId    \n) on TimeGenerated\n| project-away TimeGenerated1, IntuneDeviceId  \n| extend myJson=todynamic(Properties)\n| project-away Properties\n| extend DeviceOperatingSystem=tostring(myJson[\"DeviceOperatingSystem\"])\n| summarize FailureCount=count() by DeviceOperatingSystem\n| sort by FailureCount desc",
+        "category": "Intune",
+        "subCategory": "Compliance",
+        "tags": ["compliance", "osversion"]
+      },
+      {
+        "title": "Defender for Endpoint Compliance Health",
+        "description": "Lists devices with MDE threat levels that are not secured.",
+        "query": "IntuneDeviceComplianceOrg\n| where isnotempty(DeviceHealthThreatLevel)\n| where DeviceHealthThreatLevel != \"Secured\"\n| project TimeGenerated, DeviceName, DeviceId, OS, UserName, DeviceHealthThreatLevel",
+        "category": "Intune",
+        "subCategory": "Defender for Endpoint",
+        "tags": ["MDE", "threats", "device"]
+      },
+      {
+        "title": "Audit Events Summary",
+        "description": "Summarizes all audit events by operation name.",
+        "query": "IntuneAuditLogs \n| summarize Auditevents = count() by OperationName \n| sort by Auditevents",
+        "category": "Intune",
+        "subCategory": "Governance",
+        "tags": ["audit", "summary"]
+      },
+      {
+        "title": "Managed Device Operations",
+        "description": "Summarizes all managed device operations audited.",
+        "query": "IntuneAuditLogs \n| where OperationName contains \"Managed Device\"\n| summarize count() by OperationName\n| render piechart",
+        "category": "Intune",
+        "subCategory": "Governance",
+        "tags": ["managed device", "operations"]
+      },
+      {
+        "title": "Configuration Changes in Intune",
+        "description": "Lists changes to configurations in Intune, including policies and values.",
+        "query": "IntuneAuditLogs\n| where OperationName contains \"patch\"\n| extend User = todynamic(Properties).Actor.UPN\n| extend Apps = todynamic(Properties).Actor.ApplicationName\n| extend Device = todynamic(Properties).TargetObjectIds\n| extend Policy = replace_regex(tostring(todynamic(Properties).TargetDisplayNames), @'\\[\"\\]', \"\")\n| mv-expand todynamic(Properties).Targets[0].ModifiedProperties\n| extend Configuration = todynamic(Properties_Targets_0_ModifiedProperties).Name\n| extend ['New Value'] = todynamic(Properties_Targets_0_ModifiedProperties).New\n| extend ['Old Value'] = todynamic(Properties_Targets_0_ModifiedProperties).Old\n| where isnotempty(['Old Value'])\n| where isnotempty(['New Value'])\n| where isnotempty(User)\n| project Time = TimeGenerated, Policy, Configuration, ['New Value'], ['Old Value'], User\n| sort by Time desc",
+        "category": "Intune",
+        "subCategory": "Governance",
+        "tags": ["configuration", "intuneauditlogs"]
+      }
+    ]
