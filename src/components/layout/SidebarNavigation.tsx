@@ -1,178 +1,191 @@
-// src/app.tsx - Only updating the layout structure to accommodate the new sidebar width
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import Button from '../ui/Button';
+import { Query, CategoryInfo } from '@/types';
+import { cn } from '@/lib/utils';
 
-// Import types
-import { Query, CategoryInfo } from './types';
+interface SidebarNavigationProps {
+  categories: string[];
+  categoryInfo: Record<string, CategoryInfo>;
+  queries: Query[];
+  selectedCategory: string | null;
+  setSelectedCategory: (category: string | null) => void;
+  selectedSubCategory: string | null;
+  setSelectedSubCategory: (subcategory: string | null) => void;
+  selectedQuery: Query | null;
+  setSelectedQuery: (query: Query | null) => void;
+}
 
-// Import layout components
-import Header from './components/layout/Header';
-import SidebarNavigation from './components/layout/SidebarNavigation';
-import QueryDisplay from './components/QueryDisplay';
-import SearchModal from './components/SearchModal';
+const SidebarNavigation = ({
+  categories,
+  categoryInfo,
+  queries,
+  selectedCategory,
+  setSelectedCategory,
+  selectedSubCategory,
+  setSelectedSubCategory,
+  selectedQuery,
+  setSelectedQuery
+}: SidebarNavigationProps) => {
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  
+  // Auto-expand the selected category
+  useEffect(() => {
+    if (selectedCategory) {
+      setExpandedCategories(prev => ({
+        ...prev,
+        [selectedCategory]: true
+      }));
+    }
+  }, [selectedCategory]);
 
-const KQLLibrary = () => {
-  const [queries, setQueries] = useState<Query[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [loadingError, setLoadingError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
-  const [selectedQuery, setSelectedQuery] = useState<Query | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-
-  const categories = [
-    "Entra ID", "Defender for Identity", "Defender for Endpoint",
-    "Defender for Office 365", "Defender for Cloud Apps", "Sentinel", "Intune"
-  ];
-
-  const categoryInfo: Record<string, CategoryInfo> = {
-    "Entra ID": {
-      displayName: "Entra ID",
-      textColor: "text-blue-400",
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: ["Conditional Access", "Applications", "Authentication", "Authentication Methods", "Roles", "Governance", "Guests", "Devices"],
-      fileName: "entraID.json"
-    },
-    "Defender for Identity": {
-      displayName: "Defender for Identity",
-      textColor: "text-yellow-400",
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: ["Service Accounts", "Dormant Accounts", "Guests"],
-      fileName: "defenderForIdentity.json"
-    },
-    "Defender for Endpoint": {
-      displayName: "Defender for Endpoint",
-      textColor: "text-green-400",
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [],
-      fileName: "defenderForEndpoint.json"
-    },
-    "Defender for Office 365": {
-      displayName: "Defender for Office 365",
-      textColor: "text-orange-400",
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [],
-      fileName: "defenderForOffice365.json"
-    },
-    "Defender for Cloud Apps": {
-      displayName: "Defender for Cloud Apps",
-      textColor: "text-purple-400", 
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [],
-      fileName: "defenderForCloudApps.json"
-    },
-    "Sentinel": {
-      displayName: "Sentinel",
-      textColor: "text-red-400",
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: ["Hunting", "Automation"],
-      fileName: "sentinel.json"
-    },
-    "Intune": {
-      displayName: "Intune",
-      textColor: "text-cyan-400",
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [],
-      fileName: "intune.json"
+  // Toggle category expansion
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+    
+    // If clicking an already selected category, deselect it
+    if (selectedCategory === category) {
+      setSelectedCategory(null);
+      setSelectedSubCategory(null);
+      setSelectedQuery(null);
+    } else {
+      // Otherwise, select the new category and reset subcategory
+      setSelectedCategory(category);
+      setSelectedSubCategory(null);
     }
   };
 
-  useEffect(() => {
-    const fetchAllQueries = async () => {
-      setIsLoading(true);
-      setLoadingError(null);
-      
-      try {
-        const allQueries: Query[] = [];
-        const fetchPromises = categories.map(async (category) => {
-          const fileName = categoryInfo[category]?.fileName || `${category.toLowerCase().replace(/\s+/g, '')}.json`;
-          try {
-            const response = await fetch(`/queries/${fileName}`);
-            if (!response.ok) {
-              console.warn(`Failed to fetch queries for ${category}: ${response.status}`);
-              return [];
-            }
-            const data: Query[] = await response.json();
-            return data;
-          } catch (error) {
-            console.warn(`Error fetching ${category} queries:`, error);
-            return [];
-          }
-        });
-
-        const results = await Promise.all(fetchPromises);
-        results.forEach(categoryQueries => {
-          if (Array.isArray(categoryQueries)) {
-            allQueries.push(...categoryQueries);
-          }
-        });
-        
-        setQueries(allQueries);
-      } catch (error) {
-        console.error("Error fetching queries:", error);
-        setLoadingError("Failed to load queries. Please try again later.");
-        setQueries([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchAllQueries();
-  }, []);
-
-  // Update the selected query when category or subcategory changes
-  useEffect(() => {
-    // Filter queries based on selected category and subcategory
-    const filteredQueries = queries.filter(query => {
-      const categoryMatch = !selectedCategory || query.category === selectedCategory;
-      const subCategoryMatch = !selectedSubCategory || query.subCategory === selectedSubCategory;
-      return categoryMatch && subCategoryMatch;
+  // Filter queries by category and subcategory
+  const getFilteredQueries = (category: string, subcategory: string | null = null) => {
+    return queries.filter(query => {
+      const categoryMatch = query.category === category;
+      const subcategoryMatch = !subcategory || query.subCategory === subcategory;
+      return categoryMatch && subcategoryMatch;
     });
-    
-    // If we have filtered queries and no currently selected query (or the current query doesn't match the filters)
-    if (filteredQueries.length > 0 && 
-        (!selectedQuery || 
-         selectedQuery.category !== selectedCategory || 
-         (selectedSubCategory && selectedQuery.subCategory !== selectedSubCategory))) {
-      setSelectedQuery(filteredQueries[0]);
-    }
-  }, [selectedCategory, selectedSubCategory, queries, selectedQuery]);
-
-  // Close search modal and reset search term
-  const handleCloseSearch = () => {
-    setIsSearchModalOpen(false);
-    setSearchTerm('');
   };
+
+  // Get all subcategories for a category from the queries (not just the predefined ones)
+  const getSubcategoriesFromQueries = (category: string) => {
+    const subcategories = queries
+      .filter(query => query.category === category && query.subCategory)
+      .map(query => query.subCategory as string);
+    
+    return [...new Set(subcategories)]; // Remove duplicates
+  };
+
+  // Select a subcategory
+  const handleSubcategorySelect = (subcategory: string) => {
+    setSelectedSubCategory(prev => prev === subcategory ? null : subcategory);
+  };
+
+  // Select a query
+  const handleQuerySelect = (query: Query) => {
+    setSelectedQuery(query);
+  };
+  
+  // Get current queries based on selected filters
+  const currentQueries = selectedCategory 
+    ? getFilteredQueries(selectedCategory, selectedSubCategory)
+    : [];
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950 text-gray-100 overflow-hidden">
-      {/* Header */}
-      <Header onOpenSearch={() => setIsSearchModalOpen(true)} />
+    <div className="flex h-full">
+      {/* Left panel: Categories and Subcategories */}
+      <div className="w-64 bg-gray-900 border-r border-gray-800 overflow-y-auto h-full">
+        <div className="p-2">
+          {categories.map((category) => {
+            const isExpanded = expandedCategories[category];
+            const textColorClass = categoryInfo[category]?.textColor || "text-blue-400";
+            const subcategories = getSubcategoriesFromQueries(category);
+            
+            return (
+              <div key={category} className="mb-1">
+                <Button
+                  className={cn(
+                    "w-full p-2 rounded-md flex items-center justify-start",
+                    selectedCategory === category ? "bg-gray-800" : "hover:bg-gray-800/50"
+                  )}
+                  onClick={() => toggleCategory(category)}
+                >
+                  {isExpanded ? 
+                    <ChevronDown className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" /> : 
+                    <ChevronRight className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                  }
+                  <span className={`truncate text-left ${textColorClass}`}>
+                    {categoryInfo[category]?.displayName || category}
+                  </span>
+                </Button>
+                
+                {isExpanded && subcategories.length > 0 && (
+                  <div className="ml-2 pl-2 border-l border-gray-800 mt-1 mb-2">
+                    {subcategories.map((subcategory) => (
+                      <Button
+                        key={subcategory}
+                        className={cn(
+                          "w-full p-1.5 pl-6 text-sm rounded flex items-center justify-start",
+                          selectedSubCategory === subcategory 
+                            ? "bg-gray-800 text-[#ff79c6] font-medium" 
+                            : "text-[#ff79c6] hover:bg-gray-800/30"
+                        )}
+                        onClick={() => handleSubcategorySelect(subcategory)}
+                      >
+                        <span className="truncate text-left">{subcategory}</span>
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
-      {/* Main content area with sidebar and query display */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Two-panel sidebar navigation */}
-        <SidebarNavigation 
-          categories={categories}
-          categoryInfo={categoryInfo}
-          queries={queries}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          selectedSubCategory={selectedSubCategory}
-          setSelectedSubCategory={setSelectedSubCategory}
-          selectedQuery={selectedQuery}
-          setSelectedQuery={setSelectedQuery}
-        />
-
-        {/* Main content area */}
-        <div className="flex-1 overflow-hidden bg-gray-950">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-gray-400">Loading queries...</div>
-            </div>
-          ) : loadingError ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-red-400">{loadingError}</div>
-            </div>
+      {/* Right panel: Queries */}
+      <div className="w-72 bg-gray-900/90 overflow-y-auto h-full">
+        <div className="p-2">
+          {selectedCategory ? (
+            currentQueries.length > 0 ? (
+              <div>
+                <div className="p-2 border-b border-gray-800 mb-2">
+                  <h3 className="text-sm font-medium text-gray-400">
+                    {selectedSubCategory 
+                      ? `${selectedCategory} / ${selectedSubCategory}` 
+                      : selectedCategory}
+                    <span className="ml-1 text-xs">({currentQueries.length})</span>
+                  </h3>
+                </div>
+                {currentQueries.map((query, index) => (
+                  <Button
+                    key={index}
+                    className={cn(
+                      "w-full p-2 text-sm rounded flex items-center justify-start my-1",
+                      selectedQuery === query 
+                        ? "bg-gray-800 text-[#50fa7b]" 
+                        : "text-gray-300 hover:bg-gray-800/30"
+                    )}
+                    onClick={() => handleQuerySelect(query)}
+                  >
+                    <span className="truncate text-left">{query.title}</span>
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-6 text-gray-500">
+                No queries available for this {selectedSubCategory ? "subcategory" : "category"}
+              </div>
+            )
           ) : (
-            <QueryDisplay query={
+            <div className="text-center p-6 text-gray-500">
+              Select a category to view available queries
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SidebarNavigation;
