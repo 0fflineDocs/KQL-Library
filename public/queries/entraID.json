@@ -333,5 +333,16 @@
       "roles",
       "security"
     ]
+  },
+  {
+    "title": "Detect Device Code Authentication",
+    "description": "Identifies device code authentication attempts",
+    "query": "SigninLogs \n| where TimeGenerated > ago(90d) \n| where AuthenticationProtocol == \"deviceCode\"\n| summarize by AppDisplayName, UserId",
+    "category": "Entra ID",
+    "subCategory": "Authentication",
+    "tags": [
+      "device code",
+      "authentication"
+    ]
   }
   ]
