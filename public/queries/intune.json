@@ -1,1 +1,66 @@
-
+[
+    {
+      "title": "Corporate-Owned Work Profile Devices",
+      "description": "Summarizes the count of corporate-owned work profile Android devices by OS version.",
+      "query": "IntuneDevices\n| where OS contains \"Android (corporate-owned work profile)\"\n| summarize dcount(DeviceId) by OSVersion\n| render columnchart",
+      "category": "Intune",
+      "subCategory": "Corporate-Owned Work Profile",
+      "tags": ["android enterprise", "corporate-owned", "osversion"]
+    },
+    {
+      "title": "Fully Managed Devices",
+      "description": "Summarizes the count of fully managed Android devices by OS version.",
+      "query": "IntuneDevices\n| where OS contains \"Android (fully managed)\"\n| summarize dcount(DeviceId) by OSVersion\n| render columnchart",
+      "category": "Intune",
+      "subCategory": "Fully Managed",
+      "tags": ["android enterprise", "fully managed", "osversion"]
+    },
+    {
+      "title": "Dedicated Devices",
+      "description": "Summarizes the count of dedicated Android devices by OS version.",
+      "query": "IntuneDevices\n| where OS contains \"Android (dedicated)\"\n| summarize dcount(DeviceId) by OSVersion\n| render columnchart",
+      "category": "Intune",
+      "subCategory": "Dedicated",
+      "tags": ["android enterprise", "dedicated", "osversion"]
+    },
+    {
+      "title": "Personally-Owned Work Profile Devices",
+      "description": "Summarizes the count of personally-owned work profile Android devices by OS version.",
+      "query": "IntuneDevices\n| where OS contains \"Android (personally-owned work profile)\"\n| summarize dcount(DeviceId) by OSVersion\n| render columnchart",
+      "category": "Intune",
+      "subCategory": "Personally-Owned Work Profile",
+      "tags": ["android enterprise", "osversion"]
+    },
+    {
+      "title": "Device Administrator Devices",
+      "description": "Summarizes the count of Android devices using device administrator mode by OS version.",
+      "query": "IntuneDevices\n| where OS contains \"Android (device administrator)\"\n| summarize dcount(DeviceId) by OSVersion\n| render columnchart",
+      "category": "Intune",
+      "subCategory": "Device Administrator",
+      "tags": ["android enterprise", "device administrator", "osversion"]
+    },
+    {
+      "title": "Compliant Devices",
+      "description": "Summarizes the count of compliant devices by OS description and version.",
+      "query": "IntuneDeviceComplianceOrg \n| where isnotempty(DeviceName)\n| where ComplianceState == \"Compliant\"\n| summarize count() by OSDescription, OSVersion",
+      "category": "Intune",
+      "subCategory": "Compliance",
+      "tags": ["compliance", "osversion"]
+    },
+    {
+      "title": "Non-Compliant Devices",
+      "description": "Summarizes the count of non-compliant devices by OS description and version.",
+      "query": "IntuneDeviceComplianceOrg \n| where isnotempty(DeviceName)\n| where ComplianceState == \"Not compliant\"\n| summarize count() by OSDescription, OSVersion",
+      "category": "Intune",
+      "subCategory": "Compliance",
+      "tags": ["compliance", "non-compliant", "osversion"]
+    },
+    {
+      "title": "Compliance Failures by Operating System",
+      "description": "Summarizes compliance failures by operating system.",
+      "query": "let ComplianceLogs=\nIntuneOperationalLogs \n| where OperationName == \"Compliance\" \n| project TimeGenerated, Properties;\nComplianceLogs\n| sort by TimeGenerated desc\n| join (\nComplianceLogs\n| extend myJson = todynamic(Properties)\n| project-away Properties\n| extend IntuneDeviceId=tostring(myJson[\"IntuneDeviceId\"])\n| project TimeGenerated, IntuneDeviceId\n| summarize TimeGenerated=max(TimeGenerated) by IntuneDeviceId    \n) on TimeGenerated\n| project-away TimeGenerated1, IntuneDeviceId  \n| extend myJson=todynamic(Properties)\n| project-away Properties\n| extend DeviceOperatingSystem=tostring(myJson[\"DeviceOperatingSystem\"])\n| summarize FailureCount=count() by DeviceOperatingSystem\n| sort by FailureCount desc",
+      "category": "Intune",
+      "subCategory": "Compliance",
+      "tags": ["compliance", "osversion"]
+    }
+  ]
