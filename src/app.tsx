@@ -175,4 +175,29 @@ const KQLLibrary = () => {
               <div className="text-red-400">{loadingError}</div>
             </div>
           ) : (
-            <QueryDisplay query={
+            <QueryDisplay query={selectedQuery} />
+          )}
+        </div>
+      </div>
+
+      {/* Enhanced Search Modal */}
+      <SearchModal 
+        isOpen={isSearchModalOpen}
+        onClose={handleCloseSearch}
+        onSearch={() => {}}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        categories={categories}
+        categoryInfo={categoryInfo}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        selectedSubCategory={selectedSubCategory}
+        setSelectedSubCategory={setSelectedSubCategory}
+        queries={queries}
+        setSelectedQuery={setSelectedQuery}
+      />
+    </div>
+  );
+};
+
+export default KQLLibrary;
