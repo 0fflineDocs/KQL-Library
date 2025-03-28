@@ -85,29 +85,34 @@ const KQLLibrary = () => {
     }
   };
 
-  // Fetch queries from files
-  useEffect(() => {
-    const fetchAllQueries = async () => {
-      setIsLoading(true);
-      setLoadingError(null);
+const fetchAllQueries = async () => {
+  setIsLoading(true);
+  setLoadingError(null);
+  
+  try {
+    const allQueries: Query[] = [];
+    const fetchPromises = categories.map(async (category) => {
+      const fileName = categoryInfo[category]?.fileName || `${category.toLowerCase().replace(/\s+/g, '')}.json`;
+      console.log(`Trying to fetch ${category} using filename: ${fileName}`);
+      console.log(`Category lookup success: ${!!categoryInfo[category]}`);
       
       try {
-        const allQueries: Query[] = [];
-        const fetchPromises = categories.map(async (category) => {
-          const fileName = categoryInfo[category]?.fileName || `${category.toLowerCase().replace(/\s+/g, '')}.json`;
-          try {
-            const response = await fetch(`/queries/${fileName}`);
-            if (!response.ok) {
-              console.warn(`Failed to fetch queries for ${category}: ${response.status}`);
-              return [];
-            }
-            const data: Query[] = await response.json();
-            return data;
-          } catch (error) {
-            console.warn(`Error fetching ${category} queries:`, error);
-            return [];
-          }
-        });
+        const response = await fetch(`/queries/${fileName}`);
+        console.log(`Fetch response for ${fileName}: ${response.status} ${response.ok}`);
+        
+        if (!response.ok) {
+          console.warn(`Failed to fetch queries for ${category}: ${response.status}`);
+          return [];
+        }
+        
+        const data = await response.json();
+        console.log(`Loaded ${data.length} queries from ${fileName}`);
+        return data;
+      } catch (error) {
+        console.error(`Error fetching ${category} queries:`, error);
+        return [];
+      }
+    });
 
         const results = await Promise.all(fetchPromises);
         results.forEach(categoryQueries => {
