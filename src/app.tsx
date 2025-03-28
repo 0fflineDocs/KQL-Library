@@ -46,21 +46,21 @@ const KQLLibrary = () => {
       textColor: "text-yellow-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: ["Service Accounts", "Dormant Accounts", "Guests"],
-      fileName: "mdi.json"
+      fileName: "defenderforidentity.json"
     },
     "Defender for Endpoint": {
       displayName: "Defender for Endpoint",
       textColor: "text-green-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: [],
-      fileName: "mde.json"
+      fileName: "defenderforendpoint.json"
     },
     "Defender for Office 365": {
       displayName: "Defender for Office 365",
       textColor: "text-orange-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: [],
-      fileName: "mdo.json"
+      fileName: "defenderforoffice365.json"
     },
     "Defender for Cloud Apps": {
       displayName: "Defender for Cloud Apps",
