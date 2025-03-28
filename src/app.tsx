@@ -93,12 +93,6 @@ const fetchAllQueries = async () => {
     const allQueries: Query[] = [];
     const fetchPromises = categories.map(async (category) => {
       let fileName;
-      if (category === "Entra ID") {
-  fileName = "entraid.json";
-      if (category === "Intune") {
-  fileName = "intune.json";
-        if (category === "Sentinel") {
-  fileName = "sentinel.json";
 if (category === "Defender for Cloud Apps") {
   fileName = "defenderforcloudapps.json";
 } else if (category === "Defender for Identity") {
