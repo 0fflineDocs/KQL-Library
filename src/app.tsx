@@ -60,7 +60,7 @@ const KQLLibrary = () => {
       textColor: "text-orange-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: [],
-      fileName: ",do.json"
+      fileName: "mdo.json"
     },
     "Defender for Cloud Apps": {
       displayName: "Defender for Cloud Apps",
