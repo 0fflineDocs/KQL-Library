@@ -92,7 +92,24 @@ const fetchAllQueries = async () => {
   try {
     const allQueries: Query[] = [];
     const fetchPromises = categories.map(async (category) => {
-      const fileName = categoryInfo[category]?.fileName || `${category.toLowerCase().replace(/\s+/g, '')}.json`;
+      let fileName;
+      if (category === "Entra ID") {
+  fileName = "entraid.json";
+      if (category === "Intune") {
+  fileName = "intune.json";
+        if (category === "Sentinel") {
+  fileName = "sentinel.json";
+if (category === "Defender for Cloud Apps") {
+  fileName = "defenderforcloudapps.json";
+} else if (category === "Defender for Identity") {
+  fileName = "defenderforidentity.json";
+} else if (category === "Defender for Endpoint") {
+  fileName = "defenderforendpoint.json"; 
+} else if (category === "Defender for Office 365") {
+  fileName = "defenderforoffice365.json";
+} else {
+  fileName = categoryInfo[category]?.fileName || `${category.toLowerCase().replace(/\s+/g, '')}.json`;
+}
       console.log(`Trying to fetch ${category} using filename: ${fileName}`);
       console.log(`Category lookup success: ${!!categoryInfo[category]}`);
       
