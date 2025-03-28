@@ -1,4 +1,4 @@
-// src/components/layout/SidebarNavigation.tsx - Updated implementation
+// src/components/layout/SidebarNavigation.tsx - Complete rewrite with fixes
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import Button from '../ui/Button';
@@ -67,10 +67,10 @@ const SidebarNavigation = ({
     }
   };
 
-  // Filter queries by category and subcategory
+  // Filter queries by category and subcategory - ensure both match exactly
   const getFilteredQueries = (category: string, subcategory: string | null = null) => {
     return queries.filter(query => {
-      // First, we must match the exact category
+      // First, match the exact category
       const categoryMatch = query.category === category;
       
       // Then, if a subcategory is specified, check if it matches
@@ -89,8 +89,11 @@ const SidebarNavigation = ({
     return [...new Set(subcategories)]; // Remove duplicates
   };
 
-  // Select a subcategory using the compound key
+  // Select a subcategory using the compound key - ensure we maintain category context
   const handleSubcategorySelect = (category: string, subcategory: string) => {
+    // Important: When selecting a subcategory, also ensure the parent category is selected
+    setSelectedCategory(category);
+    
     const currentKey = selectedSubCategory;
     const newKey = createSubcategoryKey(category, subcategory);
     
@@ -102,25 +105,46 @@ const SidebarNavigation = ({
     }
   };
 
-  // Select a query
+  // Select a query and ensure category/subcategory context is maintained
   const handleQuerySelect = (query: Query) => {
     setSelectedQuery(query);
+    
+    // Ensure category is set to match the query's category
+    if (selectedCategory !== query.category) {
+      setSelectedCategory(query.category);
+    }
+    
+    // Update subcategory to match the query if needed
+    if (query.subCategory) {
+      const querySubcategoryKey = createSubcategoryKey(query.category, query.subCategory);
+      if (selectedSubCategory !== querySubcategoryKey) {
+        setSelectedSubCategory(querySubcategoryKey);
+      }
+    } else {
+      setSelectedSubCategory(null);
+    }
   };
   
-  // Get current queries based on selected filters
-  const currentQueries = selectedCategory 
-    ? getFilteredQueries(
-        selectedCategory, 
-        selectedSubCategory ? parseSubcategoryKey(selectedSubCategory).subcategory : null
-      )
-    : [];
-  
-  // For debugging - confirm we're getting the right queries
-  console.log(`Selected Category: ${selectedCategory}, Selected SubCategory Key: ${selectedSubCategory}`);
-  if (selectedSubCategory) {
-    console.log(`Parsed SubCategory: ${parseSubcategoryKey(selectedSubCategory).subcategory}`);
-  }
-  console.log(`Found ${currentQueries.length} matching queries`);
+  // Get current queries based on selected filters - ensures we respect both category and subcategory
+  const currentQueries = selectedCategory ? (() => {
+    // Extract the subcategory name from the compound key
+    const subcategoryName = selectedSubCategory 
+      ? parseSubcategoryKey(selectedSubCategory).subcategory
+      : null;
+    
+    // Verify the category in the compound key matches the selected category
+    // This prevents showing queries from the wrong category even if subcategory names match
+    const isValidSubcategory = !selectedSubCategory || 
+      parseSubcategoryKey(selectedSubCategory).category === selectedCategory;
+    
+    // If category mismatch in subcategory key, clear it
+    if (selectedSubCategory && !isValidSubcategory) {
+      // This would be handled by the parent component, but we'll filter to be safe
+      return getFilteredQueries(selectedCategory, null);
+    }
+    
+    return getFilteredQueries(selectedCategory, subcategoryName);
+  })() : [];
 
   return (
     <div className="flex h-full">
@@ -195,10 +219,10 @@ const SidebarNavigation = ({
                 </div>
                 {currentQueries.map((query, index) => (
                   <Button
-                    key={index}
+                    key={`${query.category}-${query.title}-${index}`}
                     className={cn(
                       "w-full p-2 text-sm rounded flex items-center justify-start my-1",
-                      selectedQuery?.title === query.title 
+                      selectedQuery?.title === query.title && selectedQuery?.category === query.category
                         ? "bg-gray-800 text-[#50fa7b]" 
                         : "text-gray-300 hover:bg-gray-800/30"
                     )}
