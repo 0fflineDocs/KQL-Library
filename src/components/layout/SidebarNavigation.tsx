@@ -70,8 +70,12 @@ const SidebarNavigation = ({
   // Filter queries by category and subcategory
   const getFilteredQueries = (category: string, subcategory: string | null = null) => {
     return queries.filter(query => {
+      // First, we must match the exact category
       const categoryMatch = query.category === category;
+      
+      // Then, if a subcategory is specified, check if it matches
       const subcategoryMatch = !subcategory || query.subCategory === subcategory;
+      
       return categoryMatch && subcategoryMatch;
     });
   };
