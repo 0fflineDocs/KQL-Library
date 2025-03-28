@@ -132,8 +132,10 @@ const KQLLibrary = () => {
   useEffect(() => {
     // Filter queries based on selected category and subcategory
     const filteredQueries = queries.filter(query => {
-      const categoryMatch = !selectedCategory || query.category === selectedCategory;
+      // First, we must match the category exactly
+      const categoryMatch = query.category === selectedCategory;
       
+      // Then, if a subcategory is selected, check if it matches
       let subCategoryMatch = true;
       if (selectedSubCategory) {
         const { subcategory } = parseSubcategoryKey(selectedSubCategory);
