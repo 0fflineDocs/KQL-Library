@@ -1,1 +1,81 @@
-
+[
+  {
+    "title": "Suspicious File Sharing via SharePoint and OneDrive",
+    "description": "Detects when potentially sensitive files containing keywords like 'payment' or 'invoice' are shared with a large number of users",
+    "query": "let OperationName = dynamic(['SecureLinkCreated', 'AddedToSecureLink']);\nOfficeActivity\n| where Operation in (OperationName)\n| where OfficeWorkload in ('OneDrive', 'SharePoint')\n| where SourceFileName has_any (\"payment\", \"invoice\", \"urgent\", \"mandatory\", \"Payoff\", \"Wire\", \"Confirmation\", \"password\", \"paycheck\", \"bank statement\", \"bank details\", \"closing\", \"funds\", \"bank account\", \"account details\", \"remittance\", \"deposit\", \"Reset\")\n| summarize CountOfShares = dcount(TargetUserOrGroupName), \n            make_list(TargetUserOrGroupName), \n            make_list(ClientIP), \n            make_list(TimeGenerated), \n            make_list(SourceRelativeUrl) by SourceFileName, OfficeWorkload\n| where CountOfShares > 10",
+    "category": "Sentinel",
+    "subCategory": "Hunting",
+    "tags": [
+      "SharePoint",
+      "OneDrive",
+      "phishing"
+    ]
+  },
+  {
+    "title": "Active Risky Users with Risky Sign-ins",
+    "description": "Identifies users marked as risky who have recent risky sign-ins that haven't been remediated",
+    "query": "let a=(\nAADRiskyUsers\n| where RiskLevel in ('medium','high') and RiskDetail !in('adminConfirmedUserCompromised','adminConfirmedSigninCompromised') \n| distinct tolower(UserPrincipalName));\nSigninLogs\n| where tolower(UserPrincipalName) in (a)\n| where RiskLevelDuringSignIn != 'none' and RiskState != 'remediated'\n| project TimeGenerated, Identity, Location, LocationDetails,AuthenticationRequirement, ClientAppUsed, RiskState, RiskDetail, RiskEventTypes",
+    "category": "Sentinel",
+    "subCategory": "Identity Security",
+    "tags": [
+      "identity",
+      "compromised account"
+    ]
+  },
+  {
+    "title": "Basic Incident Overview (30 Days)",
+    "description": "Lists all recent security incidents by number, status and severity from the last 30 days",
+    "query": "let startTime = ago(30d);\nlet endTime = now();\nSecurityIncident\n| where TimeGenerated >= startTime\n| summarize arg_max(TimeGenerated, *) by IncidentNumber\n| where LastModifiedTime  between (startTime .. endTime)\n| where Status in  ('New', 'Active', 'Closed')\n| where Severity in ('High','Medium','Low', 'Informational')",
+    "category": "Sentinel",
+    "subCategory": "Incident Management",
+    "tags": [
+      "incidents",
+      "incident management",
+      "security operations"
+    ]
+  },
+  {
+    "title": "Comprehensive Incident Analysis",
+    "description": "Detailed analysis of security incidents including duration, resolution status, and alert details",
+    "query": "SecurityIncident\n| where TimeGenerated >= ago(30d)\n| extend ProductName = tostring(parse_json(tostring(AdditionalData.alertProductNames))[0])\n| summarize arg_max(TimeGenerated, *) by IncidentNumber\n| extend IncidentDuration = iif(Status == \"Closed\", datetime_diff('minute', ClosedTime, CreatedTime), datetime_diff('minute', now(), CreatedTime))\n| summarize IncidentCount = count()\n    by\n    IncidentNumber,\n    tostring(AlertIds),\n    TimeGenerated,\n    Title,\n    Severity,\n    Status,\n    IncidentDuration,\n    ProviderName,\n    ProductName\n| extend Alerts = extract(\"\\\\[(.*?)\\\\]\", 1, tostring(AlertIds))\n| mv-expand todynamic(AlertIds) to typeof(string)\n| join (\n    SecurityAlert\n    | summarize AlertCount = count() by AlertSeverity, SystemAlertId, AlertName, Status\n    )\n    on $left.AlertIds == $right.SystemAlertId\n| summarize Alert_Count=sum(AlertCount), make_set(AlertName)\n    by\n    IncidentNumber,\n    Title,\n    Severity,\n    Status,\n    IncidentDuration,\n    ProviderName,\n    TimeGenerated,\n    ProductName\n| extend [\"Alert Name\"] = tostring(set_AlertName[0])\n| summarize\n    TotalIncidents = count(),\n    FirstIncidentTime= min(TimeGenerated),\n    LastIncidentTime=max(TimeGenerated),\n    ClosedIncidents = countif(Status == \"Closed\"),\n    ActiveIncidents = countif(Status == \"Active\"),\n    NewIncidents = countif(Status == \"New\"),\n    AvgIncidentDuration = avg(IncidentDuration),\n    MaxIncidentDuration = max(IncidentDuration),\n    MinIncidentDuration = min(IncidentDuration),\n    SeverityDistribution = make_list(Severity)\n    by ProviderName, Title, ProductName\n| project\n    FirstIncidentTime,\n    LastIncidentTime,\n    ProviderName,\n    ProductName,\n    Title,\n    TotalIncidents,\n    ClosedIncidents,\n    ClosedPercentage=strcat(round(ClosedIncidents * 100.0 / TotalIncidents, 1), \"%\"),\n    ActiveIncidents,\n    ActivePercentage=strcat(round(ActiveIncidents * 100.0 / TotalIncidents, 1), \"%\"),\n    NewIncidents,\n    NewPercentage=strcat(round(NewIncidents * 100.0 / TotalIncidents, 1), \"%\"),\n    round(AvgIncidentDuration, 2),\n    MaxIncidentDuration,\n    MinIncidentDuration,\n    SeverityDistribution\n| sort by TotalIncidents desc",
+    "category": "Sentinel",
+    "subCategory": "Incident Management",
+    "tags": [
+      "incidents",
+      "metrics"
+    ]
+  },
+  {
+    "title": "Alert Severity Distribution",
+    "description": "Visualizes the distribution of security alerts by severity level",
+    "query": "SecurityAlert\n| summarize count() by Severity\n| render piechart",
+    "category": "Sentinel",
+    "subCategory": "Metrics",
+    "tags": [
+      "dashboard",
+      "visualization",
+      "severity"
+    ]
+  },
+  {
+    "title": "Alert Source Product Distribution",
+    "description": "Visualizes the distribution of security alerts by source product",
+    "query": "SecurityAlert\n| summarize count() by ProductName\n| render piechart",
+    "category": "Sentinel",
+    "subCategory": "Metrics",
+    "tags": [
+      "visualization"
+    ]
+  },
+  {
+    "title": "Alert Tactics Distribution",
+    "description": "Visualizes the distribution of security alerts by MITRE ATT&CK tactics",
+    "query": "SecurityAlert\n| summarize count() by Tactics\n| render piechart",
+    "category": "Sentinel",
+    "subCategory": "Metrics",
+    "tags": [
+      "visualization",
+      "MITRE ATT&CK",
+    ]
+  }
+]
