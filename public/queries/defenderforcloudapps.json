@@ -12,7 +12,7 @@
     "description": "Detects when a single file is shared with a large number of external users across SharePoint, OneDrive, and Dropbox",
     "query": "let securelinkCreated = CloudAppEvents\n    | where ActionType == \"SecureLinkCreated\"\n    | project FileCreatedTime = Timestamp, AccountObjectId, ObjectName;\nlet filesCreated = securelinkCreated\n    | where isnotempty(ObjectName)\n    | distinct tostring(ObjectName);\nlet sharePointOneDriveSharing = CloudAppEvents\n| where ActionType == \"AddedToSecureLink\"\n| where Application in (\"Microsoft SharePoint Online\", \"Microsoft OneDrive for Business\")\n| extend FileShared = tostring(RawEventData.ObjectId)\n| where FileShared in (filesCreated)\n| extend UserSharedWith = tostring(RawEventData.TargetUserOrGroupName)\n| extend TypeofUserSharedWith = RawEventData.TargetUserOrGroupType\n| where TypeofUserSharedWith == \"Guest\"\n| where isnotempty(FileShared) and isnotempty(UserSharedWith)\n| join kind=inner securelinkCreated on $left.FileShared==$right.ObjectName\n| where (Timestamp - FileCreatedTime) between (1d .. 0h)\n| summarize NumofUsersSharedWith = dcount(UserSharedWith) by FileShared\n| where NumofUsersSharedWith >= 20;\n\nlet dropboxSharing = CloudAppEvents\n| where ActionType in (\"Added users and/or groups to shared file/folder\", \"Invited user to Dropbox and added them to shared file/folder\")\n| where Application == \"Dropbox\"\n| where ObjectType == \"File\"\n| extend FileShared = tostring(ObjectName)\n| where isnotempty(FileShared)\n| mv-expand ActivityObjects\n| where ActivityObjects.Type == \"Account\" and ActivityObjects.Role == \"To\"\n| extend SharedBy = AccountId\n| extend UserSharedWith = tostring(ActivityObjects.Name)\n| summarize dcount(UserSharedWith) by FileShared, AccountObjectId\n| where dcount_UserSharedWith >= 20;\n\n// Union the results\nsharePointOneDriveSharing\n| project FileShared, NumofUsersSharedWith, Source=\"SharePoint/OneDrive\"\n| union (dropboxSharing | project FileShared, NumofUsersSharedWith=dcount_UserSharedWith, Source=\"Dropbox\")",
     "category": "Defender for Cloud Apps",
-    "subCategory": "External Sharing",
+    "subCategory": "Suspicious Activity",
     "tags": ["CloudAppEvents","SharePoint","OneDrive"]
   },
   {
@@ -20,7 +20,7 @@
     "description": "Displays recent cloud application sharing activities",
     "query": "CloudAppEvents\n| where ActivityType == \"Share\"\n| take 100",
     "category": "Defender for Cloud Apps",
-    "subCategory": "Sharing Activity",
+    "subCategory": "File Sharing",
     "tags": ["CloudAppEvents"]
   },
   {
@@ -36,7 +36,7 @@
     "description": "Detects when strong authentication requirement is removed from a user account",
     "query": "CloudAppEvents \n| where Timestamp > ago(1d) \n| where ApplicationId == 11161 \n| where ActionType == \"Update user.\" \n| where isnotempty(AccountObjectId) \n| where RawEventData has_all(\"StrongAuthenticationRequirement\",\"[]\") \n| mv-expand ModifiedProperties = RawEventData.ModifiedProperties \n| where ModifiedProperties.Name == \"StrongAuthenticationRequirement\" and ModifiedProperties.OldValue != \"[]\" and ModifiedProperties.NewValue == \"[]\" \n| mv-expand ActivityObject = ActivityObjects \n| where ActivityObject.Role == \"Target object\" \n| extend TargetObjectId = tostring(ActivityObject.Id) \n| project Timestamp, ReportId, AccountObjectId, ActivityObjects, TargetObjectId",
     "category": "Defender for Cloud Apps",
-    "subCategory": "Authentication Methods",
+    "subCategory": "Suspicious Activity",
     "tags": ["CloudAppEvents","MFA"]
   },
   {
@@ -52,7 +52,7 @@
     "description": "Detects creation or modification of inbox rules and transport rules in Exchange Online that may be used for email forwarding in compromised accounts",
     "query": "CloudAppEvents\n| where Timestamp between (start .. end) //Timestamp from the app creation time to few hours, usually before spam emails sent\n| where AccountObjectId in (\"<Impacted AccountObjectId>\")\n| where Application == \"Microsoft Exchange Online\"\n| where ActionType in (\"New-InboxRule\", \"Set-InboxRule\", \"Set-Mailbox\", \"Set-TransportRule\", \"New-TransportRule\", \"Enable-InboxRule\", \"UpdateInboxRules\")\n| where isnotempty(IPAddress)\n| mvexpand ActivityObjects\n| extend name = parse_json(ActivityObjects).Name\n| extend value = parse_json(ActivityObjects).Value\n| where name == \"Name\"\n| extend RuleName = value \n| project Timestamp, ReportId, ActionType, AccountObjectId, IPAddress, ISP, RuleName",
     "category": "Defender for Cloud Apps",
-    "subCategory": "Mail Rules",
+    "subCategory": "Suspicious Activity",
     "tags": ["CloudAppEvents","Exchange Online","inbox rules"]
   }
 ]
