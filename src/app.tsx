@@ -114,25 +114,22 @@ const fetchAllQueries = async () => {
       }
     });
 
-        const results = await Promise.all(fetchPromises);
-        results.forEach(categoryQueries => {
-          if (Array.isArray(categoryQueries)) {
-            allQueries.push(...categoryQueries);
-          }
-        });
-        
-        setQueries(allQueries);
-      } catch (error) {
-        console.error("Error fetching queries:", error);
-        setLoadingError("Failed to load queries. Please try again later.");
-        setQueries([]);
-      } finally {
-        setIsLoading(false);
+    const results = await Promise.all(fetchPromises);
+    results.forEach(categoryQueries => {
+      if (Array.isArray(categoryQueries)) {
+        allQueries.push(...categoryQueries);
       }
-    };
+    });
     
-    fetchAllQueries();
-  }, []);
+    setQueries(allQueries);
+  } catch (error) {
+    console.error("Error fetching queries:", error);
+    setLoadingError("Failed to load queries. Please try again later.");
+    setQueries([]);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Ensure category and subcategory consistency
   useEffect(() => {
