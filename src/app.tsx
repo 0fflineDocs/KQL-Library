@@ -1,4 +1,4 @@
-// src/app.tsx - Updated to work with the new subcategory key format
+// src/app.tsx - Complete rewrite with fixes for subcategory category consistency
 import React, { useState, useEffect, useRef } from 'react';
 
 // Import types
@@ -85,6 +85,7 @@ const KQLLibrary = () => {
     }
   };
 
+  // Fetch queries from files
   useEffect(() => {
     const fetchAllQueries = async () => {
       setIsLoading(true);
@@ -128,14 +129,28 @@ const KQLLibrary = () => {
     fetchAllQueries();
   }, []);
 
+  // Ensure category and subcategory consistency
+  useEffect(() => {
+    // If we have a subcategory selected, make sure the category matches what's in the key
+    if (selectedSubCategory) {
+      const { category } = parseSubcategoryKey(selectedSubCategory);
+      
+      // If the subcategory's embedded category doesn't match the selected category, 
+      // update the selected category to match
+      if (category !== selectedCategory) {
+        setSelectedCategory(category);
+      }
+    }
+  }, [selectedSubCategory, selectedCategory]);
+
   // Update the selected query when category or subcategory changes
   useEffect(() => {
     // Filter queries based on selected category and subcategory
     const filteredQueries = queries.filter(query => {
-      // First, we must match the category exactly
+      // Must match the category exactly
       const categoryMatch = query.category === selectedCategory;
       
-      // Then, if a subcategory is selected, check if it matches
+      // Then check subcategory if one is selected
       let subCategoryMatch = true;
       if (selectedSubCategory) {
         const { subcategory } = parseSubcategoryKey(selectedSubCategory);
@@ -151,8 +166,30 @@ const KQLLibrary = () => {
          selectedQuery.category !== selectedCategory || 
          (selectedSubCategory && selectedQuery.subCategory !== parseSubcategoryKey(selectedSubCategory).subcategory))) {
       setSelectedQuery(filteredQueries[0]);
+    } else if (filteredQueries.length === 0) {
+      // No matching queries, clear the selected query
+      setSelectedQuery(null);
     }
   }, [selectedCategory, selectedSubCategory, queries, selectedQuery]);
+
+  // Custom handler to ensure state consistency when setting the subcategory
+  const handleSetSubCategory = (subcategoryKey: string | null) => {
+    if (subcategoryKey === null) {
+      setSelectedSubCategory(null);
+      return;
+    }
+    
+    // Extract category from the subcategory key
+    const { category } = parseSubcategoryKey(subcategoryKey);
+    
+    // Update the category first if needed
+    if (category !== selectedCategory) {
+      setSelectedCategory(category);
+    }
+    
+    // Then set the subcategory
+    setSelectedSubCategory(subcategoryKey);
+  };
 
   // Close search modal and reset search term
   const handleCloseSearch = () => {
@@ -175,7 +212,7 @@ const KQLLibrary = () => {
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
           selectedSubCategory={selectedSubCategory}
-          setSelectedSubCategory={setSelectedSubCategory}
+          setSelectedSubCategory={handleSetSubCategory}
           selectedQuery={selectedQuery}
           setSelectedQuery={setSelectedQuery}
         />
@@ -208,7 +245,7 @@ const KQLLibrary = () => {
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
         selectedSubCategory={selectedSubCategory}
-        setSelectedSubCategory={setSelectedSubCategory}
+        setSelectedSubCategory={handleSetSubCategory}
         queries={queries}
         setSelectedQuery={setSelectedQuery}
       />
