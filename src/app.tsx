@@ -1,4 +1,4 @@
-// src/app.tsx - Fixed version with query loading
+// src/app.tsx - Complete fixed version
 import React, { useState, useEffect } from 'react';
 
 // Import types
@@ -27,6 +27,7 @@ const KQLLibrary = () => {
   const [selectedQuery, setSelectedQuery] = useState<Query | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [queriesByCategory, setQueriesByCategory] = useState<Record<string, Query[]>>({});
 
   const categories = [
     "Entra ID", "Defender for Identity", "Defender for Endpoint",
@@ -85,43 +86,95 @@ const KQLLibrary = () => {
     }
   };
 
-  // Improved fetchAllQueries function
+  // Try multiple file name patterns for each category
+  const getFileNameVariations = (category: string, baseFileName: string) => {
+    const variations = [
+      baseFileName,
+      baseFileName.toLowerCase(),
+      baseFileName.toUpperCase(),
+      baseFileName.replace(/\.json$/, '.JSON')
+    ];
+    
+    if (category === "Defender for Cloud Apps") {
+      variations.push(
+        "defenderforcloudapps.json",
+        "defender-for-cloud-apps.json",
+        "defenderforcloud.json",
+        "cloudapps.json"
+      );
+    }
+    
+    return [...new Set(variations)]; // Remove duplicates
+  };
+
+  // Improved fetchAllQueries function to try multiple file name variations
   const fetchAllQueries = async () => {
     setIsLoading(true);
     setLoadingError(null);
     
     try {
+      const newQueriesByCategory: Record<string, Query[]> = {};
       const allQueries: Query[] = [];
       
+      // Process each category
       const fetchPromises = categories.map(async (category) => {
-        // Get the filename from categoryInfo
-        const fileName = categoryInfo[category]?.fileName;
+        // Get the base filename from categoryInfo
+        const baseFileName = categoryInfo[category]?.fileName || 
+          category.toLowerCase().replace(/\s+/g, '').replace(/for/g, 'for') + '.json';
         
-        if (!fileName) {
-          console.warn(`No fileName defined for category: ${category}`);
-          return [];
+        // Get variations to try
+        const fileNameVariations = getFileNameVariations(category, baseFileName);
+        
+        console.log(`Trying variations for ${category}:`, fileNameVariations);
+        
+        let categoryQueries: Query[] = [];
+        let successfulFileName = null;
+        
+        // Try each variation
+        for (const fileName of fileNameVariations) {
+          const filePath = `/queries/${fileName}`;
+          
+          try {
+            const response = await fetch(`${filePath}?t=${Date.now()}`);
+            
+            if (response.ok) {
+              const text = await response.text();
+              try {
+                const data = JSON.parse(text);
+                
+                if (Array.isArray(data) && data.length > 0) {
+                  categoryQueries = data;
+                  successfulFileName = fileName;
+                  console.log(`Successfully loaded ${data.length} queries for ${category} from ${fileName}`);
+                  break; // Stop trying variations once we find one that works
+                } else {
+                  console.warn(`${fileName} did not contain an array of queries`);
+                }
+              } catch (parseError) {
+                console.error(`Error parsing JSON from ${fileName}:`, parseError);
+              }
+            } else {
+              console.log(`${fileName} not found (${response.status})`);
+            }
+          } catch (error) {
+            console.error(`Error fetching ${fileName}:`, error);
+          }
         }
         
-        console.log(`Fetching ${category} using filename: ${fileName}`);
-        
-        try {
-          const response = await fetch(`/queries/${fileName}`);
-          
-          if (!response.ok) {
-            console.warn(`Failed to fetch queries for ${category} (${fileName}): ${response.status}`);
-            return [];
-          }
-          
-          const data = await response.json();
-          console.log(`Loaded ${data.length} queries from ${fileName}`);
-          return data;
-        } catch (error) {
-          console.error(`Error fetching ${category} queries (${fileName}):`, error);
+        // If we found queries, store them for this category
+        if (categoryQueries.length > 0) {
+          newQueriesByCategory[category] = categoryQueries;
+          console.log(`Added ${categoryQueries.length} queries for ${category}`);
+          return categoryQueries;
+        } else {
+          console.warn(`No queries found for ${category} after trying all variations`);
           return [];
         }
       });
 
       const results = await Promise.all(fetchPromises);
+      
+      // Combine all queries
       results.forEach(categoryQueries => {
         if (Array.isArray(categoryQueries)) {
           allQueries.push(...categoryQueries);
@@ -130,11 +183,18 @@ const KQLLibrary = () => {
       
       console.log(`Total queries loaded: ${allQueries.length}`);
       setQueries(allQueries);
+      setQueriesByCategory(newQueriesByCategory);
       
       // Auto-select first category if we have queries and nothing is selected
       if (allQueries.length > 0 && !selectedCategory) {
-        const firstQueryCategory = allQueries[0].category;
-        setSelectedCategory(firstQueryCategory);
+        // Find the first category that has queries
+        const firstCategoryWithQueries = Object.keys(newQueriesByCategory).find(cat => 
+          newQueriesByCategory[cat] && newQueriesByCategory[cat].length > 0
+        );
+        
+        if (firstCategoryWithQueries) {
+          setSelectedCategory(firstCategoryWithQueries);
+        }
       }
       
     } catch (error) {
@@ -144,6 +204,24 @@ const KQLLibrary = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Special case for mapping categories in Defender for Cloud Apps
+  const mapQueryCategory = (query: Query): Query => {
+    // If the query is from Cloud Apps but uses different categories, map them
+    if ((query.category === "Email Security" || 
+         query.category === "Data Protection" || 
+         query.category === "Cloud Security") && 
+        !categories.includes(query.category)) {
+      
+      return {
+        ...query,
+        originalCategory: query.category, // Save original for reference
+        category: "Defender for Cloud Apps"
+      };
+    }
+    
+    return query;
   };
 
   // Load queries when component mounts
@@ -224,11 +302,23 @@ const KQLLibrary = () => {
     return (
       <div className="fixed bottom-2 right-2 bg-black/70 text-white p-2 text-xs rounded z-50">
         <div>Total Queries: {queries.length}</div>
+        <div>Categories with queries: {Object.keys(queriesByCategory).join(', ')}</div>
         <div>Selected Category: {selectedCategory || 'None'}</div>
+        <div>
+          Selected Category Queries: {selectedCategory && queriesByCategory[selectedCategory] 
+            ? queriesByCategory[selectedCategory].length 
+            : 0}
+        </div>
         <div>Selected SubCategory: {selectedSubCategory ? parseSubcategoryKey(selectedSubCategory).subcategory : 'None'}</div>
         <div>Current Query: {selectedQuery?.title || 'None'}</div>
       </div>
     );
+  };
+
+  // Handle force reload button
+  const handleForceReload = () => {
+    console.log("Force reloading queries...");
+    fetchAllQueries();
   };
 
   return (
@@ -254,12 +344,19 @@ const KQLLibrary = () => {
         {/* Main content area */}
         <div className="flex-1 overflow-hidden bg-gray-950">
           {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-gray-400">Loading queries...</div>
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-gray-400 mb-4">Loading queries...</div>
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             </div>
           ) : loadingError ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-red-400">{loadingError}</div>
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-red-400 mb-4">{loadingError}</div>
+              <button
+                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded"
+                onClick={handleForceReload}
+              >
+                Try Again
+              </button>
             </div>
           ) : (
             <QueryDisplay query={selectedQuery} />
