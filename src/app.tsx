@@ -39,35 +39,35 @@ const KQLLibrary = () => {
       textColor: "text-blue-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: ["Conditional Access", "Applications", "Authentication", "Authentication Methods", "Roles", "Governance", "Guests", "Devices"],
-      fileName: "entraID.json"
+      fileName: "entraid.json"
     },
     "Defender for Identity": {
       displayName: "Defender for Identity",
       textColor: "text-yellow-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: ["Service Accounts", "Dormant Accounts", "Guests"],
-      fileName: "defenderForIdentity.json"
+      fileName: "mdi.json"
     },
     "Defender for Endpoint": {
       displayName: "Defender for Endpoint",
       textColor: "text-green-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: [],
-      fileName: "defenderForEndpoint.json"
+      fileName: "mde.json"
     },
     "Defender for Office 365": {
       displayName: "Defender for Office 365",
       textColor: "text-orange-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: [],
-      fileName: "defenderForOffice365.json"
+      fileName: ",do.json"
     },
     "Defender for Cloud Apps": {
       displayName: "Defender for Cloud Apps",
       textColor: "text-purple-400", 
       buttonBg: "bg-gray-800 hover:bg-gray-700",
       subCategories: [],
-      fileName: "defenderForCloudApps.json"
+      fileName: "mda.json"
     },
     "Sentinel": {
       displayName: "Sentinel",
