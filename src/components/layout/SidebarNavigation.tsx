@@ -1,3 +1,4 @@
+// src/components/layout/SidebarNavigation.tsx - Updated implementation
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import Button from '../ui/Button';
@@ -15,6 +16,14 @@ interface SidebarNavigationProps {
   selectedQuery: Query | null;
   setSelectedQuery: (query: Query | null) => void;
 }
+
+// Create a compound key for subcategories to make them unique
+const createSubcategoryKey = (category: string, subcategory: string) => `${category}:${subcategory}`;
+const parseSubcategoryKey = (key: string | null) => {
+  if (!key) return { category: null, subcategory: null };
+  const [category, subcategory] = key.split(':');
+  return { category, subcategory };
+};
 
 const SidebarNavigation = ({
   categories,
@@ -76,9 +85,17 @@ const SidebarNavigation = ({
     return [...new Set(subcategories)]; // Remove duplicates
   };
 
-  // Select a subcategory
-  const handleSubcategorySelect = (subcategory: string) => {
-    setSelectedSubCategory(prev => prev === subcategory ? null : subcategory);
+  // Select a subcategory using the compound key
+  const handleSubcategorySelect = (category: string, subcategory: string) => {
+    const currentKey = selectedSubCategory;
+    const newKey = createSubcategoryKey(category, subcategory);
+    
+    // If the same subcategory is clicked again, deselect it
+    if (currentKey === newKey) {
+      setSelectedSubCategory(null);
+    } else {
+      setSelectedSubCategory(newKey);
+    }
   };
 
   // Select a query
@@ -88,7 +105,10 @@ const SidebarNavigation = ({
   
   // Get current queries based on selected filters
   const currentQueries = selectedCategory 
-    ? getFilteredQueries(selectedCategory, selectedSubCategory)
+    ? getFilteredQueries(
+        selectedCategory, 
+        selectedSubCategory ? parseSubcategoryKey(selectedSubCategory).subcategory : null
+      )
     : [];
 
   return (
@@ -121,20 +141,25 @@ const SidebarNavigation = ({
                 
                 {isExpanded && subcategories.length > 0 && (
                   <div className="ml-2 pl-2 border-l border-gray-800 mt-1 mb-2">
-                    {subcategories.map((subcategory) => (
-                      <Button
-                        key={subcategory}
-                        className={cn(
-                          "w-full p-1.5 pl-6 text-sm rounded flex items-center justify-start",
-                          selectedSubCategory === subcategory 
-                            ? "bg-gray-800 text-[#ff79c6] font-medium" 
-                            : "text-[#ff79c6] hover:bg-gray-800/30"
-                        )}
-                        onClick={() => handleSubcategorySelect(subcategory)}
-                      >
-                        <span className="truncate text-left">{subcategory}</span>
-                      </Button>
-                    ))}
+                    {subcategories.map((subcategory) => {
+                      const subcategoryKey = createSubcategoryKey(category, subcategory);
+                      const isSelected = selectedSubCategory === subcategoryKey;
+                      
+                      return (
+                        <Button
+                          key={subcategoryKey}
+                          className={cn(
+                            "w-full p-1.5 pl-6 text-sm rounded flex items-center justify-start",
+                            isSelected 
+                              ? "bg-gray-800 text-[#ff79c6] font-medium" 
+                              : "text-[#ff79c6] hover:bg-gray-800/30"
+                          )}
+                          onClick={() => handleSubcategorySelect(category, subcategory)}
+                        >
+                          <span className="truncate text-left">{subcategory}</span>
+                        </Button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -152,7 +177,7 @@ const SidebarNavigation = ({
                 <div className="p-2 border-b border-gray-800 mb-2">
                   <h3 className="text-sm font-medium text-gray-400">
                     {selectedSubCategory 
-                      ? `${selectedCategory} / ${selectedSubCategory}` 
+                      ? `${selectedCategory} / ${parseSubcategoryKey(selectedSubCategory).subcategory}` 
                       : selectedCategory}
                     <span className="ml-1 text-xs">({currentQueries.length})</span>
                   </h3>
@@ -162,7 +187,7 @@ const SidebarNavigation = ({
                     key={index}
                     className={cn(
                       "w-full p-2 text-sm rounded flex items-center justify-start my-1",
-                      selectedQuery === query 
+                      selectedQuery?.title === query.title 
                         ? "bg-gray-800 text-[#50fa7b]" 
                         : "text-gray-300 hover:bg-gray-800/30"
                     )}
