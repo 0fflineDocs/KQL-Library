@@ -46,7 +46,7 @@ const KQLLibrary = () => {
       displayName: "Defender for Identity",
       textColor: "text-yellow-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: ["Service Accounts", "Dormant Accounts", "Guests"],
+      subCategories: [],
       fileName: "defenderforidentity.json"
     },
     "Defender for Endpoint": {
@@ -67,14 +67,14 @@ const KQLLibrary = () => {
       displayName: "Defender for Cloud Apps",
       textColor: "text-purple-400", 
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: ["Email Security", "Data Protection", "Cloud Security", "Entra ID"],
+      subCategories: [],
       fileName: "defenderforcloudapps.json"
     },
     "Sentinel": {
       displayName: "Sentinel",
       textColor: "text-red-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: ["Hunting", "Automation"],
+      subCategories: [],
       fileName: "sentinel.json"
     },
     "Intune": {
