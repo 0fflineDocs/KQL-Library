@@ -1,4 +1,4 @@
-// src/components/SearchModal.tsx - Updated to work with the new subcategory key format
+// src/components/SearchModal.tsx - Updated to maintain category-subcategory consistency
 import React, { useRef, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import { Query, CategoryInfo } from '@/types';
@@ -51,8 +51,8 @@ const SearchModal = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();
-      } else if (event.key === 'Enter') {
-        onClose();
+      } else if (event.key === 'Enter' && filteredQueries.length > 0) {
+        handleQuerySelect(filteredQueries[0]);
       }
     };
 
@@ -62,7 +62,7 @@ const SearchModal = ({
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, searchTerm]);
 
   // Focus input when modal opens
   useEffect(() => {
@@ -105,7 +105,10 @@ const SearchModal = ({
 
   // Handle subcategory selection
   const handleSubcategorySelect = (category: string, subcategory: string) => {
+    // Always set category first to ensure consistency
     setSelectedCategory(category);
+    
+    // Then set subcategory with compound key
     setSelectedSubCategory(createSubcategoryKey(category, subcategory));
     onClose();
   };
@@ -113,8 +116,17 @@ const SearchModal = ({
   // Handle query selection
   const handleQuerySelect = (query: Query) => {
     setSelectedQuery(query);
+    
+    // Set category to match the query's category
     setSelectedCategory(query.category);
-    setSelectedSubCategory(query.subCategory ? createSubcategoryKey(query.category, query.subCategory) : null);
+    
+    // Set subcategory if the query has one
+    if (query.subCategory) {
+      setSelectedSubCategory(createSubcategoryKey(query.category, query.subCategory));
+    } else {
+      setSelectedSubCategory(null);
+    }
+    
     onClose();
   };
 
@@ -157,7 +169,7 @@ const SearchModal = ({
                 <div className="space-y-1">
                   {filteredQueries.map((query, index) => (
                     <button
-                      key={index}
+                      key={`${query.category}-${query.title}-${index}`}
                       className="w-full text-left p-2 hover:bg-gray-800 rounded text-white flex flex-col"
                       onClick={() => handleQuerySelect(query)}
                     >
@@ -185,6 +197,13 @@ const SearchModal = ({
                 const info = categoryInfo[category];
                 const textColorClass = info?.textColor || "text-blue-400";
                 
+                // Get all subcategories for this category from actual queries
+                const subcategories = [...new Set(
+                  queries
+                    .filter(q => q.category === category && q.subCategory)
+                    .map(q => q.subCategory as string)
+                )];
+                
                 return (
                   <div key={category} className="border border-gray-800 rounded-lg p-3">
                     <button
@@ -194,9 +213,9 @@ const SearchModal = ({
                       {info?.displayName || category}
                     </button>
                     
-                    {info?.subCategories && info.subCategories.length > 0 && (
+                    {subcategories.length > 0 && (
                       <div className="ml-2 space-y-1 border-l border-gray-800 pl-2">
-                        {info.subCategories.map((subCategory) => (
+                        {subcategories.map((subCategory) => (
                           <button
                             key={`${category}:${subCategory}`}
                             className="text-left block text-sm text-[#ff79c6] hover:bg-gray-800 rounded px-2 py-1 w-full"
