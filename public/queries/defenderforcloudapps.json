@@ -5,11 +5,7 @@
     "query": "let usersWithSuspiciousEmails = EmailEvents\n    | where Subject has_all (\"shared\", \"with you\")\n    | where Subject has_any (\"payment\", \"invoice\", \"urgent\", \"mandatory\", \"Payoff\", \"Wire\", \"Confirmation\", \"password\")\n    | where isnotempty(RecipientObjectId)\n    | summarize RecipientCount = dcount(RecipientObjectId), RecipientList = make_set(RecipientObjectId) by Subject\n    | where RecipientCount >= 10\n    | mv-expand RecipientList to typeof(string)\n    | distinct RecipientList;\nAADSignInEventsBeta\n| where AccountObjectId in (usersWithSuspiciousEmails)\n| where RiskLevelDuringSignIn == 100",
     "category": "Email Security",
     "subCategory": "Suspicious Activity",
-    "tags": [
-      "email",
-      "phishing",
-      "suspicious sharing"
-    ]
+    "tags": ["email","phishing","suspicious sharing"]
   },
   {
     "title": "Suspicious Mass File Sharing to External Users",
@@ -17,11 +13,7 @@
     "query": "// Sharepoint & Onedrive - specific file has been shared by a user with multiple participants.\nlet securelinkCreated = CloudAppEvents\n    | where ActionType == \"SecureLinkCreated\"\n    | project FileCreatedTime = Timestamp, AccountObjectId, ObjectName;\nlet filesCreated = securelinkCreated\n    | where isnotempty(ObjectName)\n    | distinct tostring(ObjectName);\nlet sharePointOneDriveSharing = CloudAppEvents\n| where ActionType == \"AddedToSecureLink\"\n| where Application in (\"Microsoft SharePoint Online\", \"Microsoft OneDrive for Business\")\n| extend FileShared = tostring(RawEventData.ObjectId)\n| where FileShared in (filesCreated)\n| extend UserSharedWith = tostring(RawEventData.TargetUserOrGroupName)\n| extend TypeofUserSharedWith = RawEventData.TargetUserOrGroupType\n| where TypeofUserSharedWith == \"Guest\"\n| where isnotempty(FileShared) and isnotempty(UserSharedWith)\n| join kind=inner securelinkCreated on $left.FileShared==$right.ObjectName\n// Secure file created recently (in the last 1day)\n| where (Timestamp - FileCreatedTime) between (1d .. 0h)\n| summarize NumofUsersSharedWith = dcount(UserSharedWith) by FileShared\n| where NumofUsersSharedWith >= 20;\n\n// Dropbox - specific file has been shared by a user with multiple participants.\nlet dropboxSharing = CloudAppEvents\n| where ActionType in (\"Added users and/or groups to shared file/folder\", \"Invited user to Dropbox and added them to shared file/folder\")\n| where Application == \"Dropbox\"\n| where ObjectType == \"File\"\n| extend FileShared = tostring(ObjectName)\n| where isnotempty(FileShared)\n| mv-expand ActivityObjects\n| where ActivityObjects.Type == \"Account\" and ActivityObjects.Role == \"To\"\n| extend SharedBy = AccountId\n| extend UserSharedWith = tostring(ActivityObjects.Name)\n| summarize dcount(UserSharedWith) by FileShared, AccountObjectId\n| where dcount_UserSharedWith >= 20;\n\n// Union the results\nsharePointOneDriveSharing\n| project FileShared, NumofUsersSharedWith, Source=\"SharePoint/OneDrive\"\n| union (dropboxSharing | project FileShared, NumofUsersSharedWith=dcount_UserSharedWith, Source=\"Dropbox\")",
     "category": "Data Protection",
     "subCategory": "External Sharing",
-    "tags": [
-      "CloudAppEvents",
-      "SharePoint",
-      "OneDrive"
-    ]
+    "tags": ["CloudAppEvents","SharePoint","OneDrive"]
   },
   {
     "title": "Cloud App Share Activity",
@@ -29,9 +21,7 @@
     "query": "CloudAppEvents\n| where ActivityType == \"Share\"\n| take 100",
     "category": "Cloud Security",
     "subCategory": "Sharing Activity",
-    "tags": [
-      "CloudAppEvents"
-    ]
+    "tags": ["CloudAppEvents"]
   },
   {
     "title": "Guest Account to Admin Promotion",
@@ -39,11 +29,7 @@
     "query": "let Roles = pack_array(\"Company Administrator\");\nlet newGuestAccounts = (\nCloudAppEvents\n| where Timestamp > ago(30d)\n| where ActionType == \"Add user.\"\n| where RawEventData.ResultStatus == \"Success\"\n| where RawEventData has \"guest\" and RawEventData.ObjectId has \"#EXT#\"\n| mv-expand Property = RawEventData.ModifiedProperties\n| where Property.Name == \"AccountEnabled\" and Property.NewValue has \"true\"\n| project CreationTimestamp = Timestamp, AccountObjectId, AccountDisplayName, newGuestAccount = RawEventData.ObjectId,newGuestAccountObjectId = tostring(RawEventData.Target[1].ID), UserAgent);\nlet promotedAccounts = (\nCloudAppEvents\n| where Timestamp > ago(7d)\n| where isnotempty(AccountObjectId)\n| where ActionType == \"Add member to role.\"\n| where RawEventData.ResultStatus == \"Success\"\n| where RawEventData has_any(Roles) \n| where RawEventData.Actor has \"User\"\n| project PromoteTimestamp = Timestamp, PromotedUserAccountObjectId = tostring(RawEventData.Target[1].ID));\n//join the two tables\nnewGuestAccounts\n| join promotedAccounts on $left.newGuestAccountObjectId == $right.PromotedUserAccountObjectId\n| where PromoteTimestamp  > CreationTimestamp\n| project CreationTimestamp, PromoteTimestamp, PromotedUserAccountObjectId, newGuestAccount, newGuestAccountObjectId",
     "category": "Entra ID",
     "subCategory": "Privilege Escalation",
-    "tags": [
-      "CloudAppEvents",
-      "guest account",
-      "privilege escalation"
-    ]
+    "tags": ["CloudAppEvents","guest account","privilege escalation"]
   },
   {
     "title": "MFA Removal Detection",
@@ -51,10 +37,7 @@
     "query": "CloudAppEvents \n| where Timestamp > ago(1d) \n| where ApplicationId == 11161 \n| where ActionType == \"Update user.\" \n| where isnotempty(AccountObjectId) \n| where RawEventData has_all(\"StrongAuthenticationRequirement\",\"[]\") \n| mv-expand ModifiedProperties = RawEventData.ModifiedProperties \n| where ModifiedProperties.Name == \"StrongAuthenticationRequirement\" and ModifiedProperties.OldValue != \"[]\" and ModifiedProperties.NewValue == \"[]\" \n| mv-expand ActivityObject = ActivityObjects \n| where ActivityObject.Role == \"Target object\" \n| extend TargetObjectId = tostring(ActivityObject.Id) \n| project Timestamp, ReportId, AccountObjectId, ActivityObjects, TargetObjectId",
     "category": "Entra ID",
     "subCategory": "Authentication Methods",
-    "tags": [
-      "CloudAppEvents",
-      "MFA"
-    ]
+    "tags": ["CloudAppEvents","MFA"]
   },
   {
     "title": "Sensitivity Label Changes",
@@ -62,12 +45,7 @@
     "query": "CloudAppEvents\n| where ActionType in~ (\"FileSensitivityLabelChanged\", \"SensitivityLabelUpdated\", \"FileSensitivityLabelRemoved\", \"SensitivityLabelRemoved\")\n| extend Data = parse_json(tostring(RawEventData))\n| extend SourceFileName = iif(ActionType == \"FileSensitivityLabelChanged\", tostring(Data.SourceFileName), tostring(Data.ObjectId))\n| extend SiteUrl = Data.SiteUrl\n| extend OldLabel = Data.SensitivityLabelEventData.OldSensitivityLabelId\n| extend NewLabel = Data.SensitivityLabelEventData.SensitivityLabelId\n| project Timestamp, ActionType, SourceFileName, SiteUrl, OldLabel, NewLabel",
     "category": "Data Protection",
     "subCategory": "Sensitivity Labels",
-    "tags": [
-      "CloudAppEvents",
-      "sensitivity labels",
-      "data classification",
-      "information protection"
-    ]
+    "tags": ["CloudAppEvents","sensitivity labels","data classification","information protection"]
   },
   {
     "title": "Mail Forwarding Rules Detection",
@@ -75,10 +53,6 @@
     "query": "CloudAppEvents\n| where Timestamp between (start .. end) //Timestamp from the app creation time to few hours, usually before spam emails sent\n| where AccountObjectId in (\"<Impacted AccountObjectId>\")\n| where Application == \"Microsoft Exchange Online\"\n| where ActionType in (\"New-InboxRule\", \"Set-InboxRule\", \"Set-Mailbox\", \"Set-TransportRule\", \"New-TransportRule\", \"Enable-InboxRule\", \"UpdateInboxRules\")\n| where isnotempty(IPAddress)\n| mvexpand ActivityObjects\n| extend name = parse_json(ActivityObjects).Name\n| extend value = parse_json(ActivityObjects).Value\n| where name == \"Name\"\n| extend RuleName = value \n| project Timestamp, ReportId, ActionType, AccountObjectId, IPAddress, ISP, RuleName",
     "category": "Email Security",
     "subCategory": "Mail Rules",
-    "tags": [
-      "CloudAppEvents",
-      "Exchange Online",
-      "inbox rules"
-    ]
+    "tags": ["CloudAppEvents","Exchange Online","inbox rules"]
   }
 ]
