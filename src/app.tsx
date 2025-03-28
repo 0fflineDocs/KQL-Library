@@ -1,4 +1,4 @@
-// src/app.tsx - Only updating the layout structure to accommodate the new sidebar width
+// src/app.tsx - Updated to work with the new subcategory key format
 import React, { useState, useEffect, useRef } from 'react';
 
 // Import types
@@ -9,6 +9,14 @@ import Header from './components/layout/Header';
 import SidebarNavigation from './components/layout/SidebarNavigation';
 import QueryDisplay from './components/QueryDisplay';
 import SearchModal from './components/SearchModal';
+
+// Utility functions for subcategory key management
+const createSubcategoryKey = (category: string, subcategory: string) => `${category}:${subcategory}`;
+const parseSubcategoryKey = (key: string | null) => {
+  if (!key) return { category: null, subcategory: null };
+  const [category, subcategory] = key.split(':');
+  return { category, subcategory };
+};
 
 const KQLLibrary = () => {
   const [queries, setQueries] = useState<Query[]>([]);
@@ -125,7 +133,13 @@ const KQLLibrary = () => {
     // Filter queries based on selected category and subcategory
     const filteredQueries = queries.filter(query => {
       const categoryMatch = !selectedCategory || query.category === selectedCategory;
-      const subCategoryMatch = !selectedSubCategory || query.subCategory === selectedSubCategory;
+      
+      let subCategoryMatch = true;
+      if (selectedSubCategory) {
+        const { subcategory } = parseSubcategoryKey(selectedSubCategory);
+        subCategoryMatch = query.subCategory === subcategory;
+      }
+      
       return categoryMatch && subCategoryMatch;
     });
     
@@ -133,7 +147,7 @@ const KQLLibrary = () => {
     if (filteredQueries.length > 0 && 
         (!selectedQuery || 
          selectedQuery.category !== selectedCategory || 
-         (selectedSubCategory && selectedQuery.subCategory !== selectedSubCategory))) {
+         (selectedSubCategory && selectedQuery.subCategory !== parseSubcategoryKey(selectedSubCategory).subcategory))) {
       setSelectedQuery(filteredQueries[0]);
     }
   }, [selectedCategory, selectedSubCategory, queries, selectedQuery]);
