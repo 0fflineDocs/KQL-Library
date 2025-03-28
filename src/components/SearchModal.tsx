@@ -1,7 +1,16 @@
+// src/components/SearchModal.tsx - Updated to work with the new subcategory key format
 import React, { useRef, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import { Query, CategoryInfo } from '@/types';
 import { cn } from '@/lib/utils';
+
+// Utility functions for subcategory key management
+const createSubcategoryKey = (category: string, subcategory: string) => `${category}:${subcategory}`;
+const parseSubcategoryKey = (key: string | null) => {
+  if (!key) return { category: null, subcategory: null };
+  const [category, subcategory] = key.split(':');
+  return { category, subcategory };
+};
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -97,7 +106,7 @@ const SearchModal = ({
   // Handle subcategory selection
   const handleSubcategorySelect = (category: string, subcategory: string) => {
     setSelectedCategory(category);
-    setSelectedSubCategory(subcategory);
+    setSelectedSubCategory(createSubcategoryKey(category, subcategory));
     onClose();
   };
 
@@ -105,7 +114,7 @@ const SearchModal = ({
   const handleQuerySelect = (query: Query) => {
     setSelectedQuery(query);
     setSelectedCategory(query.category);
-    setSelectedSubCategory(query.subCategory || null);
+    setSelectedSubCategory(query.subCategory ? createSubcategoryKey(query.category, query.subCategory) : null);
     onClose();
   };
 
@@ -189,7 +198,7 @@ const SearchModal = ({
                       <div className="ml-2 space-y-1 border-l border-gray-800 pl-2">
                         {info.subCategories.map((subCategory) => (
                           <button
-                            key={subCategory}
+                            key={`${category}:${subCategory}`}
                             className="text-left block text-sm text-[#ff79c6] hover:bg-gray-800 rounded px-2 py-1 w-full"
                             onClick={() => handleSubcategorySelect(category, subCategory)}
                           >
