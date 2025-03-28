@@ -1,5 +1,5 @@
-// src/app.tsx - Complete rewrite with fixes for subcategory category consistency
-import React, { useState, useEffect, useRef } from 'react';
+// src/app.tsx - Fixed version with query loading
+import React, { useState, useEffect } from 'react';
 
 // Import types
 import { Query, CategoryInfo } from './types';
@@ -66,7 +66,7 @@ const KQLLibrary = () => {
       displayName: "Defender for Cloud Apps",
       textColor: "text-purple-400", 
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [],
+      subCategories: ["Email Security", "Data Protection", "Cloud Security", "Entra ID"],
       fileName: "defenderforcloudapps.json"
     },
     "Sentinel": {
@@ -80,76 +80,83 @@ const KQLLibrary = () => {
       displayName: "Intune",
       textColor: "text-cyan-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [],
+      subCategories: ["Android Enterprise", "Compliance", "Defender for Endpoint", "Governance"],
       fileName: "intune.json"
     }
   };
 
-const fetchAllQueries = async () => {
-  setIsLoading(true);
-  setLoadingError(null);
-  
-  try {
-    const allQueries: Query[] = [];
-    const fetchPromises = categories.map(async (category) => {
-      let fileName;
-if (category === "Defender for Cloud Apps") {
-  fileName = "defenderforcloudapps.json";
-} else if (category === "Defender for Identity") {
-  fileName = "defenderforidentity.json";
-} else if (category === "Defender for Endpoint") {
-  fileName = "defenderforendpoint.json"; 
-} else if (category === "Defender for Office 365") {
-  fileName = "defenderforoffice365.json";
-} else {
-  fileName = categoryInfo[category]?.fileName || `${category.toLowerCase().replace(/\s+/g, '')}.json`;
-}
-      console.log(`Trying to fetch ${category} using filename: ${fileName}`);
-      console.log(`Category lookup success: ${!!categoryInfo[category]}`);
+  // Improved fetchAllQueries function
+  const fetchAllQueries = async () => {
+    setIsLoading(true);
+    setLoadingError(null);
+    
+    try {
+      const allQueries: Query[] = [];
       
-      try {
-        const response = await fetch(`/queries/${fileName}`);
-        console.log(`Fetch response for ${fileName}: ${response.status} ${response.ok}`);
+      const fetchPromises = categories.map(async (category) => {
+        // Get the filename from categoryInfo
+        const fileName = categoryInfo[category]?.fileName;
         
-        if (!response.ok) {
-          console.warn(`Failed to fetch queries for ${category}: ${response.status}`);
+        if (!fileName) {
+          console.warn(`No fileName defined for category: ${category}`);
           return [];
         }
         
-        const data = await response.json();
-        console.log(`Loaded ${data.length} queries from ${fileName}`);
-        return data;
-      } catch (error) {
-        console.error(`Error fetching ${category} queries:`, error);
-        return [];
-      }
-    });
+        console.log(`Fetching ${category} using filename: ${fileName}`);
+        
+        try {
+          const response = await fetch(`/queries/${fileName}`);
+          
+          if (!response.ok) {
+            console.warn(`Failed to fetch queries for ${category} (${fileName}): ${response.status}`);
+            return [];
+          }
+          
+          const data = await response.json();
+          console.log(`Loaded ${data.length} queries from ${fileName}`);
+          return data;
+        } catch (error) {
+          console.error(`Error fetching ${category} queries (${fileName}):`, error);
+          return [];
+        }
+      });
 
-    const results = await Promise.all(fetchPromises);
-    results.forEach(categoryQueries => {
-      if (Array.isArray(categoryQueries)) {
-        allQueries.push(...categoryQueries);
+      const results = await Promise.all(fetchPromises);
+      results.forEach(categoryQueries => {
+        if (Array.isArray(categoryQueries)) {
+          allQueries.push(...categoryQueries);
+        }
+      });
+      
+      console.log(`Total queries loaded: ${allQueries.length}`);
+      setQueries(allQueries);
+      
+      // Auto-select first category if we have queries and nothing is selected
+      if (allQueries.length > 0 && !selectedCategory) {
+        const firstQueryCategory = allQueries[0].category;
+        setSelectedCategory(firstQueryCategory);
       }
-    });
-    
-    setQueries(allQueries);
-  } catch (error) {
-    console.error("Error fetching queries:", error);
-    setLoadingError("Failed to load queries. Please try again later.");
-    setQueries([]);
-  } finally {
-    setIsLoading(false);
-  }
-};
+      
+    } catch (error) {
+      console.error("Error fetching queries:", error);
+      setLoadingError("Failed to load queries. Please try again later.");
+      setQueries([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load queries when component mounts
+  useEffect(() => {
+    fetchAllQueries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Ensure category and subcategory consistency
   useEffect(() => {
-    // If we have a subcategory selected, make sure the category matches what's in the key
     if (selectedSubCategory) {
       const { category } = parseSubcategoryKey(selectedSubCategory);
       
-      // If the subcategory's embedded category doesn't match the selected category, 
-      // update the selected category to match
       if (category !== selectedCategory) {
         setSelectedCategory(category);
       }
@@ -210,6 +217,20 @@ if (category === "Defender for Cloud Apps") {
     setSearchTerm('');
   };
 
+  // Simple debug component for development
+  const renderDebugInfo = () => {
+    if (process.env.NODE_ENV === 'production') return null;
+    
+    return (
+      <div className="fixed bottom-2 right-2 bg-black/70 text-white p-2 text-xs rounded z-50">
+        <div>Total Queries: {queries.length}</div>
+        <div>Selected Category: {selectedCategory || 'None'}</div>
+        <div>Selected SubCategory: {selectedSubCategory ? parseSubcategoryKey(selectedSubCategory).subcategory : 'None'}</div>
+        <div>Current Query: {selectedQuery?.title || 'None'}</div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-950 text-gray-100 overflow-hidden">
       {/* Header */}
@@ -262,6 +283,9 @@ if (category === "Defender for Cloud Apps") {
         queries={queries}
         setSelectedQuery={setSelectedQuery}
       />
+      
+      {/* Debug info for development */}
+      {renderDebugInfo()}
     </div>
   );
 };
