@@ -110,6 +110,13 @@ const SidebarNavigation = ({
         selectedSubCategory ? parseSubcategoryKey(selectedSubCategory).subcategory : null
       )
     : [];
+  
+  // For debugging - confirm we're getting the right queries
+  console.log(`Selected Category: ${selectedCategory}, Selected SubCategory Key: ${selectedSubCategory}`);
+  if (selectedSubCategory) {
+    console.log(`Parsed SubCategory: ${parseSubcategoryKey(selectedSubCategory).subcategory}`);
+  }
+  console.log(`Found ${currentQueries.length} matching queries`);
 
   return (
     <div className="flex h-full">
