@@ -1,1 +1,26 @@
-
+[
+  {
+    "title": "ASR Audit Events Statistics",
+    "description": "Provides statistics on Attack Surface Reduction (ASR) rules operating in audit mode, showing event counts and affected machine counts per rule",
+    "query": "DeviceEvents\n| where ActionType startswith \"Asr\" and ActionType endswith \"Audited\"\n| summarize EventCount=count(), MachinesCount=dcount(DeviceId) by ActionType",
+    "category": "Defender for Endpoint",
+    "subCategory": "Attack Surface Reduction",
+    "tags": [
+      "ASR",
+      "audit mode",
+      "DeviceEvents"
+    ]
+  },
+  {
+    "title": "ASR Block Events Statistics",
+    "description": "Provides statistics on Attack Surface Reduction (ASR) rules operating in block mode, showing blocked event counts and affected machine counts per rule",
+    "query": "DeviceEvents\n| where ActionType startswith \"Asr\" and ActionType endswith \"Blocked\"\n| summarize EventCount=count(), MachinesCount=dcount(DeviceId) by ActionType",
+    "category": "Defender for Endpoint",
+    "subCategory": "Attack Surface Reduction",
+    "tags": [
+      "ASR",
+      "block mode",
+      "DeviceEvents"
+    ]
+  }
+]
