@@ -19,6 +19,17 @@ const parseSubcategoryKey = (key: string | null) => {
 };
 
 const KQLLibrary = () => {
+  // Define the preferred order of categories
+  const preferredCategoryOrder = [
+    "Entra ID",
+    "Defender for Identity", 
+    "Defender for Endpoint",
+    "Defender for Office 365",
+    "Defender for Cloud Apps",
+    "Sentinel",
+    "Intune"
+  ];
+
   const [queries, setQueries] = useState<Query[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadingError, setLoadingError] = useState<string | null>(null);
@@ -38,7 +49,19 @@ const KQLLibrary = () => {
   // Function to update categories, categoryInfo and subcategories based on loaded queries
   const updateCategoriesAndInfo = (queriesData: Query[]) => {
     // Extract unique categories from loaded queries
-    const uniqueCategories = [...new Set(queriesData.map(q => q.category))].sort();
+    const uniqueCategories = [...new Set(queriesData.map(q => q.category))];
+    
+    // Sort categories based on predefined order
+    const sortedCategories = [...uniqueCategories].sort((a, b) => {
+      const indexA = preferredCategoryOrder.indexOf(a);
+      const indexB = preferredCategoryOrder.indexOf(b);
+      
+      // Handle categories not in the predefined order (put them at the end)
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      
+      return indexA - indexB;
+    });
     
     // Create a map to store subcategories for each category
     const subcategoriesByCategory: Record<string, Set<string>> = {};
@@ -71,8 +94,8 @@ const KQLLibrary = () => {
     // Apply default colors for new/unknown categories
     const defaultColors = { textColor: "text-indigo-400", buttonBg: "bg-gray-800 hover:bg-gray-700" };
     
-    // Create category info for each unique category
-    uniqueCategories.forEach(category => {
+    // Create category info for each unique category (in sorted order)
+    sortedCategories.forEach(category => {
       const colors = colorSchemes[category] || defaultColors;
       
       newCategoryInfo[category] = {
@@ -86,10 +109,10 @@ const KQLLibrary = () => {
       };
     });
     
-    setCategories(uniqueCategories);
+    setCategories(sortedCategories);
     setCategoryInfo(newCategoryInfo);
     
-    console.log("Updated categories:", uniqueCategories);
+    console.log("Updated categories:", sortedCategories);
     console.log("Updated category info:", newCategoryInfo);
   };
 
@@ -100,18 +123,17 @@ const KQLLibrary = () => {
     
     try {
       // Hardcoded list of all JSON files in the queries directory
-      // This is the simplest approach for a fixed set of files
       const queryFiles = [
-        'entraid.json',
         'defenderforcloudapps.json',
         'defenderforidentity.json',
         'defenderforoffice365.json',
+        'entraid.json',
+        'intune.json',
         'mde-attacksurfacereduction.json',
         'mde-endpoint.json',
         'mde-governance.json',
         'mde-smartscreen.json',
-        'sentinel.json',
-        'intune.json'
+        'sentinel.json'
       ];
       
       const newQueriesByCategory: Record<string, Query[]> = {};
@@ -137,8 +159,16 @@ const KQLLibrary = () => {
           }
           
           try {
-            // Parse the JSON data - could be an array or a single object
-            const data = JSON.parse(text);
+            // Parse the JSON data
+            let data;
+            try {
+              data = JSON.parse(text);
+            } catch (parseError) {
+              console.error(`Error parsing JSON from ${fileName}:`, parseError);
+              // Try to log the first part of the file to help debug
+              console.log(`Content sample: ${text.substring(0, 100)}...`);
+              return;
+            }
             
             // Handle both array and single object formats
             const queryArray = Array.isArray(data) ? data : [data];
@@ -161,8 +191,8 @@ const KQLLibrary = () => {
             });
             
             console.log(`Successfully loaded ${queryArray.length} queries from ${fileName}`);
-          } catch (parseError) {
-            console.error(`Error parsing JSON from ${fileName}:`, parseError);
+          } catch (error) {
+            console.error(`Error processing ${fileName}:`, error);
           }
         } catch (fetchError) {
           console.error(`Error fetching ${fileName}:`, fetchError);
@@ -173,14 +203,16 @@ const KQLLibrary = () => {
       updateCategoriesAndInfo(allQueries);
       
       console.log(`Total queries loaded: ${allQueries.length}`);
+      console.log(`Categories loaded: ${Object.keys(newQueriesByCategory).join(', ')}`);
       setQueriesByCategory(newQueriesByCategory);
       setQueries(allQueries);
       
       // Auto-select first category with queries if nothing is selected
       if (allQueries.length > 0 && !selectedCategory) {
-        const firstCategoryWithQueries = Object.keys(newQueriesByCategory).find(cat => 
+        // Get the first category with queries according to the preferred order
+        const firstCategoryWithQueries = preferredCategoryOrder.find(cat => 
           newQueriesByCategory[cat] && newQueriesByCategory[cat].length > 0
-        );
+        ) || Object.keys(newQueriesByCategory)[0];
         
         if (firstCategoryWithQueries) {
           setSelectedCategory(firstCategoryWithQueries);
