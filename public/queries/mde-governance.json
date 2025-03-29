@@ -1,1 +1,50 @@
-
+[
+  {
+    "title": "MITRE ATT&CK Technique Distribution",
+    "description": "Visualizes the distribution of MITRE ATT&CK techniques observed across Microsoft 365 Defender solutions in the past 30 days",
+    "query": "AlertInfo\n| where Timestamp > ago(30d)\n| where ServiceSource in (\"AAD Identity Protection\", \"Microsoft Defender for Endpoint\", \"Microsoft Defender for Office 365\", \"Microsoft Defender for Identity\", \"Microsoft Cloud App Security\", \"Microsoft 365 Defender\")\n| where isnotempty(AttackTechniques)\n| mv-expand DetailedAttackTechniques= parse_json(AttackTechniques)\n| summarize MITRE_ATTACK_list = count() by tostring(DetailedAttackTechniques)\n| render columnchart",
+    "category": "Defender for Endpoint",
+    "subCategory": "Governance",
+    "tags": [
+      "MITRE ATT&CK",
+      "threat intelligence",
+      "techniques",
+      "visualization"
+    ]
+  },
+  {
+    "title": "High and Medium Severity Alerts by Product",
+    "description": "Tracks high and medium severity alerts across all Microsoft Defender products over the past 30 days with a daily breakdown",
+    "query": "AlertInfo\n| where Timestamp > ago(30d)\n| where Severity in (\"Medium\", \"High\")\n| summarize \nEndpoints = countif(ServiceSource == \"Microsoft Defender for Endpoint\"),\nIdentities = countif(ServiceSource == \"Microsoft Defender for Identity\" or ServiceSource == \"AAD Identity Protection\"),\nEmails = countif(ServiceSource == \"Microsoft Defender for Office 365\"),\nApplications = countif(ServiceSource == \"Microsoft Cloud App Security\"),\nM365D_XDR = countif(ServiceSource == \"Microsoft 365 Defender\")\nby bin(Timestamp, 1d)\n| render timechart",
+    "category": "Defender for Endpoint",
+    "subCategory": "Governance",
+    "tags": [
+      "alerts",
+      "severity",
+      "visualization"
+    ]
+  },
+  {
+    "title": "Defender for Endpoint Alert Severity Trends",
+    "description": "Visualizes daily alert trends for Microsoft Defender for Endpoint by severity level over the past 30 days",
+    "query": "AlertInfo\n| where Timestamp > ago(30d) \n| where ServiceSource == \"Microsoft Defender for Endpoint\"\n| summarize AlertNum = count() by Severity, bin(Timestamp, 1d)\n| render timechart",
+    "category": "Defender for Endpoint",
+    "subCategory": "Governance",
+    "tags": [
+      "alerts",
+      "severity",
+      "visualization"
+    ]
+  },
+  {
+    "title": "Top 10 Alert Sources",
+    "description": "Identifies the top 10 alert sources based on detection source, service, category and severity",
+    "query": "AlertInfo\n| where Timestamp > ago(30d)\n| summarize count() by DetectionSource, ServiceSource, Category, Severity\n| top 10 by count_ desc nulls last",
+    "category": "Defender for Endpoint",
+    "subCategory": "Governance",
+    "tags": [
+      "alerts",
+      "detection sources"
+    ]
+  }
+]
