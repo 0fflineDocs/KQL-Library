@@ -6,9 +6,43 @@
     "category": "Defender for Identity",
     "subCategory": "Dormant Accounts",
     "tags": [
-      "inactive",
-      "identity",
+      "governance",
       "account"
+    ]
+  },
+  {
+    "title": "Guests with Entra ID Roles Assigned",
+    "description": "Identifies guest accounts that have been assigned privileged Entra ID roles",
+    "query": "IdentityInfo\n| where TimeGenerated > ago(21d)\n| summarize arg_max(TimeGenerated, *) by AccountUPN\n| where UserType == \"Guest\"\n| where AssignedRoles != \"[]\" \n| where isnotempty(AssignedRoles)\n| project AccountUPN, AssignedRoles, AccountObjectId",
+    "category": "Defender for Identity",
+    "subCategory": "Privileged Access",
+    "tags": [
+      "guest accounts",
+      "privileged access"
+    ]
+  },
+  {
+    "title": "Files Downloaded by Guest Users",
+    "description": "Summarizes the total count and list of files downloaded by guest users in Microsoft 365",
+    "query": "let timeframe=30d;\nIdentityInfo\n| where TimeGenerated > ago(21d)\n| where UserType == \"Guest\"\n| summarize arg_max(TimeGenerated, *) by AccountUPN\n| project UserId=tolower(AccountUPN)\n| join kind=inner (\n    OfficeActivity\n    | where TimeGenerated > ago(timeframe)\n    | where Operation in (\"FileSyncDownloadedFull\", \"FileDownloaded\")\n    )\n    on UserId\n| summarize DownloadCount=count(), DownloadList=make_set(OfficeObjectId) by UserId",
+    "category": "Defender for Identity",
+    "subCategory": "Data Access",
+    "tags": [
+      "guest accounts",
+      "file downloads",
+      "external access"
+    ]
+  },
+  {
+    "title": "File Downloads by Guest Domains",
+    "description": "Summarizes the total count of files downloaded by each external domain with guest users",
+    "query": "let timeframe=30d;\nIdentityInfo\n| where TimeGenerated > ago(21d)\n| where UserType == \"Guest\"\n| summarize arg_max(TimeGenerated, *) by AccountUPN, MailAddress\n| project UserId=tolower(AccountUPN), MailAddress\n| join kind=inner (\n    OfficeActivity\n    | where TimeGenerated > ago(timeframe)\n    | where Operation in (\"FileSyncDownloadedFull\", \"FileDownloaded\")\n    )\n    on UserId\n| extend username = tostring(split(UserId,\"#\")[0])\n| parse MailAddress with * \"@\" userdomain \n| summarize count() by userdomain",
+    "category": "Defender for Identity",
+    "subCategory": "Data Access",
+    "tags": [
+      "guest domains",
+      "file downloads",
+      "external access",
     ]
   }
 ]
