@@ -22,5 +22,63 @@
       "block mode",
       "DeviceEvents"
     ]
+  },
+  {
+    "title": "ASR Rules Event Count Summary",
+    "description": "Counts and ranks all Attack Surface Reduction rule events by frequency, showing which rules are triggered most often",
+    "query": "DeviceEvents\n| where ActionType startswith \"Asr\"\n| summarize count() by ActionType\n| order by count_ desc",
+    "category": "Defender for Endpoint",
+    "subCategory": "Attack Surface Reduction",
+    "tags": [
+      "ASR",
+      "DeviceEvents",
+      "rules summary"
+    ]
+  },
+  {
+    "title": "Device ASR Rules Configuration Status",
+    "description": "Provides a comprehensive view of all Windows devices and their Attack Surface Reduction rules configuration status",
+    "query": "DeviceInfo\n| where OnboardingStatus == 'Onboarded'\n| where isnotempty(OSPlatform)\n| summarize arg_max(Timestamp, *) by DeviceName\n| where OSPlatform startswith \"Windows\"\n| project DeviceName, OSPlatform\n| join kind=leftouter (\n  DeviceTvmInfoGathering\n  | extend AF = parse_json(AdditionalFields)\n  | extend ASR1 = parse_json(AdditionalFields.AsrConfigurationStates)\n  | project DeviceName, ASR1\n  | evaluate bag_unpack(ASR1)\n  )\n  on $left.DeviceName == $right.DeviceName\n  | project-away DeviceName1",
+    "category": "Defender for Endpoint",
+    "subCategory": "Attack Surface Reduction",
+    "tags": [
+      "ASR",
+      "configuration"
+    ]
+  },
+  {
+    "title": "Office Communication App Child Process Events",
+    "description": "Displays the latest events for the Office Communication App Child Process ASR rule in audit mode",
+    "query": "DeviceEvents\n| where ActionType == \"AsrOfficeCommAppChildProcessAudited\"",
+    "category": "Defender for Endpoint",
+    "subCategory": "Attack Surface Reduction",
+    "tags": [
+      "ASR",
+      "Office",
+      "audit"
+    ]
+  },
+  {
+    "title": "Office Macro ASR Rule Detections",
+    "description": "Displays events related to Office Macro ASR rules with detailed process and file information",
+    "query": "DeviceEvents\n| where (Actiontype startswith \"AsrOfficeMacro\")\n| extend RuleId=extractjson(\"$Ruleid\", AdditionalFields, typeof(string))\n| project DeviceName, FileName, FolderPath, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessCommandLine",
+    "category": "Defender for Endpoint",
+    "subCategory": "Attack Surface Reduction",
+    "tags": [
+      "ASR",
+      "Office"
+    ]
+  },
+  {
+    "title": "ASR Rule Detections by Category",
+    "description": "Visualizes ASR rule detections over the past 7 days, categorized by attack vector with timeline and detailed file information",
+    "query": "DeviceEvents\n | where Timestamp > ago(7d)\n | where ActionType startswith \"asr\"\n | extend Parsed = parse_json(AdditionalFields)\n | where Parsed.IsAudit == \"false\" \n | summarize Email = make_list_if(strcat(format_datetime(Timestamp,'yyyy-M-dd H:mm:ss'), \" : \", ActionType, \" : \", FileName), ActionType in (\"AsrExecutableEmailContentBlocked\", \"AsrOfficeCommAppChildProcessBlocked\")),\n             Script = make_list_if(strcat(format_datetime(Timestamp,'yyyy-M-dd H:mm:ss'), \" : \", ActionType, \" : \", FileName),ActionType in (\"AsrObfuscatedScriptBlocked\", \"AsrScriptExecutableDownloadBlocked\")),\n             WMI = make_list_if(strcat(format_datetime(Timestamp,'yyyy-M-dd H:mm:ss'), \" : \", ActionType, \" : \", FileName), ActionType in (\"AsrPersistenceThroughWmiBlocked\", \"AsrPsexecWmiChildProcessBlocked\")),\n             OfficeApp = make_list_if(strcat(format_datetime(Timestamp,'yyyy-M-dd H:mm:ss'), \" : \", ActionType, \" : \", FileName), ActionType in (\"AsrOfficeChildProcessBlocked\", \"AsrOfficeMacroWin32ApiCallsBlocked\", \"AsrExecutableOfficeContentBlocked\", \"AsrOfficeProcessInjectionBlocked\")),\n             3rdPartyApp = make_list_if(strcat(format_datetime(Timestamp,'yyyy-M-dd H:mm:ss'), \" : \", ActionType, \" : \", FileName), ActionType == \"AsrAdobeReaderChildProcessBlocked\"),\n             WindowsCredentials = make_list_if(strcat(format_datetime(Timestamp,'yyyy-M-dd H:mm:ss'), \" : \", ActionType, \" : \", FileName), ActionType == \"AsrLsassCredentialTheftBlocked\"),\n             PolymorphicThreats =make_list_if(strcat(format_datetime(Timestamp,'yyyy-M-dd H:mm:ss'), \" : \", ActionType, \" : \", FileName), ActionType in (\"AsrUntrustedExecutableBlocked\", \"AsrUntrustedUsbProcessBlocked\", \"AsrRansomwareBlocked\", \"AsrVulnerableSignedDriverBlocked\")) by DeviceId, DeviceName\n | extend Case = array_length(Email) + array_length(Script) + array_length(WMI) + array_length(OfficeApp) + array_length(3rdPartyApp) + array_length(WindowsCredentials) + array_length(PolymorphicThreats)\n | project DeviceId, DeviceName, Case, Email, Script, WMI, OfficeApp, 3rdPartyApp, WindowsCredentials, PolymorphicThreats\n | order by Case desc",
+    "category": "Defender for Endpoint",
+    "subCategory": "Attack Surface Reduction",
+    "tags": [
+      "ASR",
+      "block mode",
+      "visualization"
+    ]
   }
 ]
