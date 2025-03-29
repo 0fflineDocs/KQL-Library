@@ -1,6 +1,9 @@
 # KQL Library 
 
-A sleek, modern web application for organizing and searching your KQL (Kusto Query Language) queries.\
+A sleek, modern web application for organizing and searching KQL (Kusto Query Language) queries.\
+KQL Library provides a clean, intuitive interface for security professionals to search and copy kusto queries.\
+Featuring category-based organization and instant search capabilities.
+
 Built with **React, TypeScript**, and **Tailwind CSS**.
 
 <img width="1475" alt="KQL" src="https://github.com/user-attachments/assets/3fc8367f-9ab5-47b8-995b-0e0f2e79cbc4" />
