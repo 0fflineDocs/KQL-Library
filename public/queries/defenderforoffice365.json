@@ -1,11 +1,92 @@
-{
-  "title": "Potential Email Bombing Detection",
-  "description": "Identifies potential email bombing attacks by detecting anomalous volumes of inbound emails to individual recipients using time series anomaly detection",
-  "query": "EmailEvents\n| where EmailDirection == \"Inbound\"\n| make-series Emailcount = count()\non Timestamp step 1h by RecipientObjectId\n| extend (Anomalies, AnomalyScore, ExpectedEmails) = series_decompose_anomalies(Emailcount)\n| mv-expand Emailcount, Anomalies, AnomalyScore, ExpectedEmails to typeof(double), Timestamp\n| where Anomalies != 0\n| where AnomalyScore >= 10",
-  "category": "Defender for Office 365",
-  "subCategory": "Threat Detection",
-  "tags": [
-    "EmailEvents",
-    "anomaly detection"
-  ]
-}
+[
+  {
+    "title": "QR Code Image Pattern Detection",
+    "description": "Detects potential QR code phishing by identifying senders who use multiple unique first-four-character patterns in image attachments",
+    "query": "EmailAttachmentInfo | \nwhere FileType in (\"png\", \"jpg\", \"jpeg\", \"gif\", \"svg\") | \nwhere isnotempty(FileName) | \nextend firstFourFileName = substring(FileName, 0, 4) | \nsummarize RecipientsCount = dcount(RecipientEmailAddress), FirstFourFilesCount = dcount(firstFourFileName), suspiciousEmails = make_set(NetworkMessageId, 10) by SenderFromAddress | \nwhere FirstFourFilesCount >= 10",
+    "category": "Defender for Office 365",
+    "subCategory": "Email Attachments",
+    "tags": [
+      "qrcode",
+      "phishing"
+    ]
+  },
+  {
+    "title": "HTML Attachment URL Analysis",
+    "description": "Identifies inbound emails with HTML attachments and extracts URLs from both attachments and email body",
+    "query": "let HTMLfile = (EmailAttachmentInfo\n| where FileType =~ \"html\");\nlet HTMLurl = (EmailUrlInfo\n| where UrlLocation == \"Attachment\"\n| summarize HTMLfile_URL_list = make_list(Url) by NetworkMessageId);\nlet Emailurl = (EmailUrlInfo\n| where UrlLocation == \"Body\"\n| summarize Email_URL_list = make_list(Url) by NetworkMessageId);\nEmailEvents\n| where EmailDirection == \"Inbound\"\n| join kind = inner HTMLfile on NetworkMessageId\n| join kind = inner HTMLurl on NetworkMessageId\n| join kind = leftouter Emailurl on NetworkMessageId\n| project Timestamp, ReportId, NetworkMessageId, SenderFromAddress, RecipientEmailAddress, FileName, FileType, ThreatTypes, ThreatNames, HTMLfile_URL_list, Email_URL_list",
+    "category": "Defender for Office 365",
+    "subCategory": "URL Analysis",
+    "tags": [
+      "html",
+      "url",
+      "phishing"
+    ]
+  },
+  {
+    "title": "Malicious URL Detection for Network Protection",
+    "description": "Identifies malicious URLs in emails for addition to Microsoft Defender for Endpoint indicators",
+    "query": "EmailUrlInfo\n| where Timestamp > ago(4h)\n| where Url contains \"malicious.example\"\n| distinct Url",
+    "category": "Defender for Office 365",
+    "subCategory": "URL Analysis",
+    "tags": [
+      "url",
+      "network protection",
+      "mde"
+    ]
+  },
+  {
+    "title": "QR Code Email Pattern Detection",
+    "description": "Detects potential QR code phishing emails with specific filename patterns that weren't blocked",
+    "query": "EmailAttachmentInfo\n| where Timestamp > ago(30d)\n| where FileType contains \"png\"\n| where FileName matches regex \"^[A-Z0-9]{9,10}\\\\.[A-Za-z0-9]+$\"\n| where SenderFromAddress !contains \"EXCLUDE DOMAIN\" //Exclude your corporate domain\n| where RecipientObjectId != \"\"\n| join EmailEvents on NetworkMessageId\n| where DeliveryAction != \"Blocked\"\n| where DeliveryAction != \"Junked\"",
+    "category": "Defender for Office 365",
+    "subCategory": "QR Code Phishing",
+    "tags": [
+      "qrcode",
+      "phishing"
+    ]
+  },
+  {
+    "title": "Users Who Clicked Phishing Links",
+    "description": "Identifies users who received emails with threats and clicked on URLs",
+    "query": "let UserClickedLink = (UrlClickEvents \n| where Workload == \"Email\"\n| where ActionType == \"ClickAllowed\" or IsClickedThrough != \"0\");\nEmailEvents\n| where EmailDirection == \"Inbound\"\n| where ThreatTypes has_any (\"Phish\", \"Malware\")\n| join kind = inner UserClickedLink on NetworkMessageId\n| project Timestamp, ReportId, NetworkMessageId, SenderFromAddress, RecipientEmailAddress, ActionType, IsClickedThrough, Url",
+    "category": "Defender for Office 365",
+    "subCategory": "User Behavior",
+    "tags": [
+      "phishing",
+      "malware"
+    ]
+  },
+  {
+    "title": "Email Threat Types and Detection Methods",
+    "description": "Lists all threat types and detection methods identified in post-delivery email events",
+    "query": "EmailPostDeliveryEvents \n| project ThreatTypes, DetectionMethods",
+    "category": "Defender for Office 365",
+    "subCategory": "Threat Intelligence",
+    "tags": [
+      "threat types",
+      "detection methods"
+    ]
+  },
+  {
+    "title": "ZIP Files from Suspicious TLDs",
+    "description": "Hunts for emails with ZIP attachments from specific top-level domains identified in malicious emails",
+    "query": "EmailAttachmentInfo\n| where Timestamp > ago(4h)\n| where FileType == \"zip\"\n| where SenderFromAddress has_any (\".br\", \".ru\", \".jp\")",
+    "category": "Defender for Office 365",
+    "subCategory": "Email Attachments",
+    "tags": [
+      "zip",
+      "tld"
+    ]
+  },
+  {
+    "title": "Invoice-Related ZIP Files for Blocklist",
+    "description": "Identifies ZIP files with 'invoice' in the filename for potential addition to tenant block lists",
+    "query": "EmailAttachmentInfo\n| where Timestamp > ago(8h)\n| where FileType == \"zip\"\n| where FileName contains \"invoice\"\n| distinct SHA256, FileName",
+    "category": "Defender for Office 365",
+    "subCategory": "Email Attachments",
+    "tags": [
+      "zip",
+      "invoice"
+    ]
+  }
+]
