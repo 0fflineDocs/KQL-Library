@@ -1,6 +1,5 @@
 # KQL Library 
 
-A sleek, modern web application for organizing and searching KQL (Kusto Query Language) queries.\
 KQL Library provides a clean, intuitive interface for security professionals to search and copy kusto queries.\
 Featuring category-based organization and instant search capabilities.
 
