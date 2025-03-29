@@ -6,7 +6,7 @@
     "category": "Defender for Identity",
     "subCategory": "Dormant Accounts",
     "tags": [
-      "governance",
+      "inactive",
       "account"
     ]
   },
@@ -29,8 +29,7 @@
     "subCategory": "Data Access",
     "tags": [
       "guest accounts",
-      "file downloads",
-      "external access"
+      "file downloads"
     ]
   },
   {
@@ -42,7 +41,76 @@
     "tags": [
       "guest domains",
       "file downloads",
-      "external access",
+      "external access"
+    ]
+  },
+  {
+    "title": "Password Never Expires Changes",
+    "description": "Alerts when Defender for Identity detects an account being set to 'password never expires'",
+    "query": "IdentityDirectoryEvents\n| where ActionType == \"Account Password Never Expires changed\"\n| extend ['Password never expires previous setting'] = tostring(AdditionalFields.[\"FROM Account Password Never Expires\"])\n| extend ['Password never expires current setting'] = tostring(AdditionalFields.[\"TO Account Password Never Expires\"])\n| project\n    Timestamp,\n    TargetAccountUpn,\n    ['Password never expires current setting'],\n    ['Password never expires previous setting']",
+    "category": "Defender for Identity",
+    "subCategory": "Password Policy",
+    "tags": [
+      "password policy",
+      "security configuration"
+    ]
+  },
+  {
+    "title": "Disabled User Accounts",
+    "description": "Identifies all user accounts that are currently disabled in the directory",
+    "query": "IdentityInfo | where IsAccountEnabled == \"0\" | summarize arg_max(AccountName,*) by AccountUpn",
+    "category": "Defender for Identity",
+    "subCategory": "Account Status",
+    "tags": [
+      "disabled accounts",
+      "account management"
+    ]
+  },
+  {
+    "title": "Service Account Authentication Patterns",
+    "description": "Tracks authentication patterns for service accounts over time to establish baseline behavior",
+    "query": "let timeframe = 30d; let srvc_list = dynamic([\"svc_account1@contoso.com\",\"svc_account6@contoso.com\"]); \nIdentityLogonEvents \n| where Timestamp >= ago(timeframe) \n| where AccountUpn in~ (srvc_list) \n| summarize Count = count() by bin(Timestamp, 24h), AccountName, DeviceName \n| sort by Timestamp desc",
+    "category": "Defender for Identity",
+    "subCategory": "Service Accounts",
+    "tags": [
+      "service accounts",
+      "authentication"
+    ]
+  },
+  {
+    "title": "Domain Admin Service Accounts",
+    "description": "Monitors logon activity of service accounts with Domain Admin privileges",
+    "query": "let timeframe = 30d; let srvc_list = dynamic([\"svc_account1@contoso.com\",\"svc_account2@contoso.com\",\"svc_account3@contoso.com\",\"svc_account4@contoso.com\",\"svc_account5@contoso.com\",\"svc_account6@contoso.com\"]); \nIdentityLogonEvents \n| where Timestamp >= ago(timeframe) \n| where AccountUpn in~ (srvc_list) \n| summarize Count = count() by AccountName, DeviceName, Protocol",
+    "category": "Defender for Identity",
+    "subCategory": "Privileged Access",
+    "tags": [
+      "service accounts",
+      "domain admins",
+      "privileged access",
+      "authentication protocols"
+    ]
+  },
+  {
+    "title": "Service Creation on Domain Controllers",
+    "description": "Tracks service creation activities on domain controllers which could indicate privilege escalation attempts",
+    "query": "IdentityDirectoryEvents \n| where ActionType == \"Service creation\" \n| extend ServiceName = AdditionalFields[\"ServiceName\"] \n| extend ServiceCommand = AdditionalFields[\"ServiceCommand\"] \n| project Timestamp, ActionType, Protocol, DC = TargetDeviceName, ServiceName, ServiceCommand, AccountDisplayName, AccountSid, AdditionalFields | limit 100",
+    "category": "Defender for Identity",
+    "subCategory": "Domain Controller Security",
+    "tags": [
+      "service creation",
+      "domain controllers",
+      "privilege escalation",
+      "persistence"
+    ]
+  },
+  {
+    "title": "Potentially Unused Service Accounts",
+    "description": "Identifies service accounts with no authentication activity in the past 30 days",
+    "query": "let timeframe = 30d;\nlet accounts = dynamic([\"svc_account1@contoso.com\", \"svc_account2@contoso.com\"]);\nIdentityLogonEvents\n| where Timestamp >= ago(timeframe)\n| where AccountUpn in (accounts)\n| summarize AuthCount=count() by AccountUpn\n| where AuthCount == 0",
+    "category": "Defender for Identity",
+    "subCategory": "Service Accounts",
+    "tags": [
+      "service accounts"
     ]
   }
 ]
