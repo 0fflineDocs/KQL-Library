@@ -102,16 +102,16 @@ const KQLLibrary = () => {
       // Hardcoded list of all JSON files in the queries directory
       // This is the simplest approach for a fixed set of files
       const queryFiles = [
+        'entraid.json',
         'defenderforcloudapps.json',
         'defenderforidentity.json',
         'defenderforoffice365.json',
-        'entraid.json',
-        'intune.json',
         'mde-attacksurfacereduction.json',
         'mde-endpoint.json',
         'mde-governance.json',
         'mde-smartscreen.json',
-        'sentinel.json'
+        'sentinel.json',
+        'intune.json'
       ];
       
       const newQueriesByCategory: Record<string, Query[]> = {};
