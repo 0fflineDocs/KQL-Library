@@ -4,7 +4,7 @@
     "description": "Detects potential QR code phishing by identifying senders who use multiple unique first-four-character patterns in image attachments",
     "query": "EmailAttachmentInfo | \nwhere FileType in (\"png\", \"jpg\", \"jpeg\", \"gif\", \"svg\") | \nwhere isnotempty(FileName) | \nextend firstFourFileName = substring(FileName, 0, 4) | \nsummarize RecipientsCount = dcount(RecipientEmailAddress), FirstFourFilesCount = dcount(firstFourFileName), suspiciousEmails = make_set(NetworkMessageId, 10) by SenderFromAddress | \nwhere FirstFourFilesCount >= 10",
     "category": "Defender for Office 365",
-    "subCategory": "Email Attachments",
+    "subCategory": "QR Code Phishing",
     "tags": [
       "qrcode",
       "phishing"
