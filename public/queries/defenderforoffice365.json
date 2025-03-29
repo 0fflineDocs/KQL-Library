@@ -1,1 +1,11 @@
-
+{
+  "title": "Potential Email Bombing Detection",
+  "description": "Identifies potential email bombing attacks by detecting anomalous volumes of inbound emails to individual recipients using time series anomaly detection",
+  "query": "EmailEvents\n| where EmailDirection == \"Inbound\"\n| make-series Emailcount = count()\non Timestamp step 1h by RecipientObjectId\n| extend (Anomalies, AnomalyScore, ExpectedEmails) = series_decompose_anomalies(Emailcount)\n| mv-expand Emailcount, Anomalies, AnomalyScore, ExpectedEmails to typeof(double), Timestamp\n| where Anomalies != 0\n| where AnomalyScore >= 10",
+  "category": "Defender for Office 365",
+  "subCategory": "Threat Detection",
+  "tags": [
+    "EmailEvents",
+    "anomaly detection"
+  ]
+}
