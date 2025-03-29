@@ -4,10 +4,10 @@ A sleek, modern web application for organizing and searching your KQL (Kusto Que
 Built with React, TypeScript, and Tailwind CSS.
 
 ## Features
-🗂️ Organize queries by category and subcategory
-🔍 Search functionality across titles, descriptions, and tags
-📋 One-click copy button for quick query access
-📱 Responsive design for all devices
+🗂️  Organize queries by category and subcategory.\
+🔍  Search functionality across titles, descriptions, and tags.\
+📋  One-click copy button for quick query access.\
+📱  Responsive design for all devices.
 
 ## Color Scheme 🎨
 
