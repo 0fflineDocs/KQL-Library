@@ -1,1 +1,128 @@
-
+[
+  {
+    "title": "System Service Installations",
+    "description": "Tracks installation of services running under SYSTEM account privileges by non-system users",
+    "query": "DeviceEvents\n| where ActionType == \"ServiceInstalled\"\n| where AdditionalFields.ServiceAccount == \"system\" or AdditionalFields.ServiceAccount == \"LocalSystem\"\n| where InitiatingProcessAccountUpn != \"\"\n| project TimeGenerated, ServiceName=AdditionalFields.ServiceName, ServiceAccount=AdditionalFields.ServiceAccount, DeviceName, DeviceId, FolderPath, FileName, InitiatingProcessAccountUpn, InitiatingProcessAccountName, InitiatingProcessAccountObjectId\n| order by TimeGenerated desc",
+    "category": "Defender for Endpoint",
+    "subCategory": "Privilege Escalation",
+    "tags": [
+      "service installation",
+      "SYSTEM privileges",
+      "privilege escalation",
+      "persistence"
+    ]
+  },
+  {
+    "title": "Windows Defender Registry Modifications",
+    "description": "Monitors registry changes related to Microsoft Defender Antivirus policies which could indicate tampering attempts",
+    "query": "DeviceRegistryEvents\n| where Timestamp > ago(30d)\n| where RegistryKey has @\"HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\"\n| project-reorder Timestamp, DeviceId, DeviceName, ActionType, RegistryKey, RegistryValueType, RegistryValueName, RegistryValueData\n| sort by Timestamp desc",
+    "category": "Defender for Endpoint",
+    "subCategory": "Security Control Tampering",
+    "tags": [
+      "registry",
+      "Windows Defender",
+      "tampering"
+    ]
+  },
+  {
+    "title": "Defender Service Stopping Attempts",
+    "description": "Detects attempts to disable Microsoft Defender Antivirus and Microsoft Defender for Endpoint services",
+    "query": "DeviceEvents\n| where Timestamp > ago(30d)\n| where ActionType == \"OtherAlertRelatedActivity\"| where AdditionalFields has\"net stop Sense\" or AdditionalFields has \"sc stop Sense\" or AdditionalFields has \"net stop WinDefend\" or AdditionalFields has \"sc stop WinDefend\"\n| extend Command = split(AdditionalFields, 'line')[1]\n| project-reorder Timestamp, DeviceId, DeviceName, Command",
+    "category": "Defender for Endpoint",
+    "subCategory": "Security Control Tampering",
+    "tags": [
+      "Windows Defender",
+      "SENSE"
+    ]
+  },
+  {
+    "title": "Files Copied to USB Drives",
+    "description": "Identifies files copied to USB external drives, including details of the USB drive and the files created",
+    "query": "let UsbDriveMount = DeviceEvents\n| where ActionType==\"UsbDriveMounted\"\n| extend ParsedFields=parse_json(AdditionalFields)\n| project DeviceId, DeviceName, DriveLetter=ParsedFields.DriveLetter, MountTime=Timestamp,\nProductName=ParsedFields.ProductName,SerialNumber=ParsedFields.SerialNumber,Manufacturer=ParsedFields.Manufacturer\n| order by DeviceId asc, MountTime desc;\nlet FileCreation = DeviceFileEvents\n| where InitiatingProcessAccountName != \"system\"\n| where ActionType == \"FileCreated\"\n| where FolderPath !startswith \"C:\\\\\"\n| where FolderPath !startswith \"\\\\\\\\\"\n| project ReportId,DeviceId,InitiatingProcessAccountDomain,\nInitiatingProcessAccountName,InitiatingProcessAccountUpn,\nFileName, FolderPath, SHA256, Timestamp, SensitivityLabel, IsAzureInfoProtectionApplied\n| order by DeviceId asc, Timestamp desc;\nFileCreation | lookup kind=inner (UsbDriveMount) on DeviceId\n| where FolderPath startswith DriveLetter\n| where Timestamp >= MountTime\n| partition by ReportId ( top 1 by MountTime )\n| order by DeviceId asc, Timestamp desc",
+    "category": "Defender for Endpoint",
+    "subCategory": "Data Exfiltration",
+    "tags": [
+      "USB",
+      "removable media",
+      "data exfiltration"
+    ]
+  },
+  {
+    "title": "Defender Tampering Attempts with Target Details",
+    "description": "Identifies tampering attempts against Microsoft Defender components, including the specific targeted component",
+    "query": "DeviceEvents \n| where ActionType == \"TamperingAttempt\" \n| extend AdditionalInfo = parse_json(AdditionalFields) \n| extend Status = AdditionalInfo.['Status']\n| extend Target = AdditionalInfo.['Target']",
+    "category": "Defender for Endpoint",
+    "subCategory": "Security Control Tampering",
+    "tags": [
+      "tampering",
+      "Defender"
+    ]
+  },
+  {
+    "title": "Defender Tampering Attempts by Device",
+    "description": "Counts tampering attempts against Microsoft Defender components per device over the past 30 days",
+    "query": "DeviceEvents\n| whereTimestamp > ago(30d)\n| whereActionType == \"TamperingAttempt\"| summarizeTamperingAttempt = count() byDeviceId, DeviceName",
+    "category": "Defender for Endpoint",
+    "subCategory": "Security Control Tampering",
+    "tags": [
+      "tampering",
+      "Windows Defender"
+    ]
+  },
+  {
+    "title": "Defender Tampering Registry Targets",
+    "description": "Lists the specific registry values targeted in tampering attempts against Microsoft Defender",
+    "query": "DeviceEvents\n| where Timestamp > ago(30d)\n| where ActionType == \"TamperingAttempt\"\n| summarize Registry_Value = make_list(RegistryValueName) by DeviceId, DeviceName",
+    "category": "Defender for Endpoint",
+    "subCategory": "Security Control Tampering",
+    "tags": [
+      "tampering",
+      "registry"
+    ]
+  },
+  {
+    "title": "Devices Not Onboarded to Defender for Endpoint",
+    "description": "Lists devices that are not properly onboarded to Microsoft Defender for Endpoint",
+    "query": "DeviceInfo\n| where OnboardingStatus != \"Onboarded\" \n| summarize arg_max(Timestamp, *) by DeviceId \n| where isempty(MergedToDeviceId) \n| limit 100 \n| invoke SeenBy() \n| project DeviceId, DeviceName, DeviceType, OSVersion, Model, SeenBy",
+    "category": "Defender for Endpoint",
+    "subCategory": "Inventory Management",
+    "tags": [
+      "onboarding",
+      "inventory"
+    ]
+  },
+  {
+    "title": "Windows OS Version Distribution",
+    "description": "Creates a pivot table showing the distribution of different Windows OS builds across the environment",
+    "query": "DeviceInfo\n| where Timestamp > ago(30d)\n| where isnotempty(OSBuild)\n| summarize arg_max(Timestamp, *) by DeviceName\n| where isnotempty(OSPlatform)\n| evaluate pivot(OSBuild, count(), OSPlatform)\n| where OSPlatform contains \"Windows\"\n| sort by OSPlatform desc",
+    "category": "Defender for Endpoint",
+    "subCategory": "Inventory Management",
+    "tags": [
+      "Windows",
+      "OS versions"
+    ]
+  },
+  {
+    "title": "Service Installation in Suspicious Locations",
+    "description": "Identifies service installations using executables located in potentially suspicious directories",
+    "query": "DeviceEvents\n| where ActionType == \"ServiceInstalled\"\n| where FolderPath in (\"C:\\\\Temp\\\\\", \"C:\\\\ProgramData\\\\\", \"C:\\\\Windows\\\\\", \"C:\\\\Windows\\\\Temp\\\\\", \"C:\\\\\")\n| project TimeGenerated, ServiceName=AdditionalFields.ServiceName, ServiceAccount=AdditionalFields.ServiceAccount, DeviceName, DeviceId, FolderPath, FileName, InitiatingProcessAccountUpn, InitiatingProcessAccountName, InitiatingProcessAccountObjectId\n| order by TimeGenerated desc",
+    "category": "Defender for Endpoint",
+    "subCategory": "Privilege Escalation",
+    "tags": [
+      "suspicious path",
+      "privilege escalation",
+      "persistence"
+    ]
+  },
+  {
+    "title": "Suspicious SSH Usage with SYSTEM Privileges",
+    "description": "Detects unauthorized usage of SSH running with SYSTEM account privileges",
+    "query": "DeviceProcessEvents\n| where InitiatingProcessCommandLine in (\"ssh\", \"-p 443\")\n| where AccountSid == \"S-1-5-18\"\n| project TimeGenerated, DeviceId, DeviceName, AccountName, InitiatingProcessCommandLine, InitiatingProcessFolderPath, InitiatingProcessFileName\n| order by TimeGenerated desc",
+    "category": "Defender for Endpoint",
+    "subCategory": "Lateral Movement",
+    "tags": [
+      "SSH",
+      "SYSTEM privileges"
+    ]
+  }
+]
