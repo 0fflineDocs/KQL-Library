@@ -1,4 +1,4 @@
-// src/app.tsx - Complete fixed version
+// src/app.tsx - Core fix for JSON loading issues
 import React, { useState, useEffect } from 'react';
 
 // Import types
@@ -10,37 +10,12 @@ import SidebarNavigation from './components/layout/SidebarNavigation';
 import QueryDisplay from './components/QueryDisplay';
 import SearchModal from './components/SearchModal';
 
-// Utility functions for subcategory key management
+// Define helper functions for subcategory management
 const createSubcategoryKey = (category: string, subcategory: string) => `${category}:${subcategory}`;
 const parseSubcategoryKey = (key: string | null) => {
   if (!key) return { category: null, subcategory: null };
   const [category, subcategory] = key.split(':');
   return { category, subcategory };
-};
-
-const updateSubcategories = (queriesData: Query[]) => {
-  // Create a map to store subcategories for each category
-  const subcategoriesByCategory: Record<string, Set<string>> = {};
-  
-  // Extract subcategories from queries
-  queriesData.forEach(query => {
-    if (!query.category || !query.subCategory) return;
-    
-    if (!subcategoriesByCategory[query.category]) {
-      subcategoriesByCategory[query.category] = new Set<string>();
-    }
-    
-    subcategoriesByCategory[query.category].add(query.subCategory);
-  });
-  
-  // Update the categoryInfo with the extracted subcategories
-  Object.keys(subcategoriesByCategory).forEach(category => {
-    if (categoryInfo[category]) {
-      categoryInfo[category].subCategories = Array.from(subcategoriesByCategory[category]).sort();
-    }
-  });
-  
-  console.log("Updated subcategories from queries:", subcategoriesByCategory);
 };
 
 const KQLLibrary = () => {
@@ -64,53 +39,54 @@ const KQLLibrary = () => {
       displayName: "Entra ID",
       textColor: "text-blue-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Empty array - will be populated dynamically
+      subCategories: [], // Will be populated dynamically
       fileName: "entraid.json"
     },
     "Defender for Identity": {
       displayName: "Defender for Identity",
       textColor: "text-yellow-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Empty array - will be populated dynamically
+      subCategories: [], // Will be populated dynamically
       fileName: "defenderforidentity.json"
     },
     "Defender for Endpoint": {
       displayName: "Defender for Endpoint",
       textColor: "text-green-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Empty array - will be populated dynamically
+      subCategories: [], // Will be populated dynamically
       fileName: "defenderforendpoint.json"
     },
     "Defender for Office 365": {
       displayName: "Defender for Office 365",
       textColor: "text-orange-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Empty array - will be populated dynamically
+      subCategories: [], // Will be populated dynamically
       fileName: "defenderforoffice365.json"
     },
     "Defender for Cloud Apps": {
       displayName: "Defender for Cloud Apps",
       textColor: "text-purple-400", 
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Empty array - will be populated dynamically
+      subCategories: [], // Will be populated dynamically
       fileName: "defenderforcloudapps.json"
     },
     "Sentinel": {
       displayName: "Sentinel",
       textColor: "text-red-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Empty array - will be populated dynamically
+      subCategories: [], // Will be populated dynamically
       fileName: "sentinel.json"
     },
     "Intune": {
       displayName: "Intune",
       textColor: "text-cyan-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Empty array - will be populated dynamically
+      subCategories: [], // Will be populated dynamically
       fileName: "intune.json"
     }
   };
 
+  // Function to update subcategories based on query data
   const updateSubcategories = (queriesData: Query[]) => {
     // Create a map to store subcategories for each category
     const subcategoriesByCategory: Record<string, Set<string>> = {};
@@ -136,28 +112,7 @@ const KQLLibrary = () => {
     console.log("Updated subcategories:", subcategoriesByCategory);
   };
 
-  // Try multiple file name patterns for each category
-  const getFileNameVariations = (category: string, baseFileName: string) => {
-    const variations = [
-      baseFileName,
-      baseFileName.toLowerCase(),
-      baseFileName.toUpperCase(),
-      baseFileName.replace(/\.json$/, '.JSON')
-    ];
-    
-    if (category === "Defender for Cloud Apps") {
-      variations.push(
-        "defenderforcloudapps.json",
-        "defender-for-cloud-apps.json",
-        "defenderforcloud.json",
-        "cloudapps.json"
-      );
-    }
-    
-    return [...new Set(variations)]; // Remove duplicates
-  };
-
-  // Improved fetchAllQueries function to try multiple file name variations
+  // Fixed function to fetch all queries
   const fetchAllQueries = async () => {
     setIsLoading(true);
     setLoadingError(null);
@@ -166,80 +121,73 @@ const KQLLibrary = () => {
       const newQueriesByCategory: Record<string, Query[]> = {};
       const allQueries: Query[] = [];
       
-      // Process each category
-      const fetchPromises = categories.map(async (category) => {
-        // Get the base filename from categoryInfo
-        const baseFileName = categoryInfo[category]?.fileName || 
-          category.toLowerCase().replace(/\s+/g, '').replace(/for/g, 'for') + '.json';
+      // Process each category with proper error handling
+      await Promise.all(categories.map(async (category) => {
+        // Construct file path based on category
+        const fileName = categoryInfo[category]?.fileName || 
+                        `${category.toLowerCase().replace(/\s+/g, '').replace(/ for /g, 'for')}.json`;
         
-        // Get variations to try
-        const fileNameVariations = getFileNameVariations(category, baseFileName);
+        const filePath = `/queries/${fileName}`;
+        console.log(`Attempting to load: ${filePath}`);
         
-        console.log(`Trying variations for ${category}:`, fileNameVariations);
-        
-        let categoryQueries: Query[] = [];
-        let successfulFileName = null;
-        
-        // Try each variation
-        for (const fileName of fileNameVariations) {
-          const filePath = `/queries/${fileName}`;
+        try {
+          // Add cache-busting parameter and proper error handling
+          const response = await fetch(filePath + `?t=${Date.now()}`);
+          
+          if (!response.ok) {
+            console.warn(`Failed to load ${fileName}: ${response.status} ${response.statusText}`);
+            return;
+          }
+          
+          // Get the text content first to properly handle JSON parsing errors
+          const text = await response.text();
+          if (!text || text.trim() === '') {
+            console.warn(`Empty response from ${fileName}`);
+            newQueriesByCategory[category] = [];
+            return;
+          }
           
           try {
-            const response = await fetch(`${filePath}?t=${Date.now()}`);
+            // Parse the JSON data
+            const data = JSON.parse(text);
             
-            if (response.ok) {
-              const text = await response.text();
-              try {
-                const data = JSON.parse(text);
-                
-                if (Array.isArray(data) && data.length > 0) {
-                  categoryQueries = data;
-                  successfulFileName = fileName;
-                  console.log(`Successfully loaded ${data.length} queries for ${category} from ${fileName}`);
-                  break; // Stop trying variations once we find one that works
-                } else {
-                  console.warn(`${fileName} did not contain an array of queries`);
-                }
-              } catch (parseError) {
-                console.error(`Error parsing JSON from ${fileName}:`, parseError);
-              }
-            } else {
-              console.log(`${fileName} not found (${response.status})`);
+            if (!Array.isArray(data)) {
+              console.warn(`Invalid data format in ${fileName}, expected array`);
+              newQueriesByCategory[category] = [];
+              return;
             }
-          } catch (error) {
-            console.error(`Error fetching ${fileName}:`, error);
+            
+            // Map queries to ensure consistent category naming
+            const categoryQueries = data.map(query => ({
+              ...query,
+              // Ensure category is consistent with our predefined categories
+              category: query.category === category ? query.category : category
+            }));
+            
+            // Store the queries for this category
+            newQueriesByCategory[category] = categoryQueries;
+            allQueries.push(...categoryQueries);
+            
+            console.log(`Successfully loaded ${categoryQueries.length} queries for ${category}`);
+          } catch (parseError) {
+            console.error(`Error parsing JSON from ${fileName}:`, parseError);
+            newQueriesByCategory[category] = [];
           }
+        } catch (fetchError) {
+          console.error(`Error fetching ${fileName}:`, fetchError);
+          newQueriesByCategory[category] = [];
         }
-        
-        // If we found queries, store them for this category
-        if (categoryQueries.length > 0) {
-          newQueriesByCategory[category] = categoryQueries;
-          console.log(`Added ${categoryQueries.length} queries for ${category}`);
-          return categoryQueries;
-        } else {
-          console.warn(`No queries found for ${category} after trying all variations`);
-          return [];
-        }
-      });
-
-      const results = await Promise.all(fetchPromises);
+      }));
       
-      // Combine all queries
-      results.forEach(categoryQueries => {
-        if (Array.isArray(categoryQueries)) {
-          allQueries.push(...categoryQueries);
-        }
-      });
-      
+      // Update subcategories based on loaded queries
       updateSubcategories(allQueries);
-
-      console.log(`Total queries loaded: ${allQueries.length}`);
-      setQueries(allQueries);
-      setQueriesByCategory(newQueriesByCategory);
       
-      // Auto-select first category if we have queries and nothing is selected
+      console.log(`Total queries loaded: ${allQueries.length}`);
+      setQueriesByCategory(newQueriesByCategory);
+      setQueries(allQueries);
+      
+      // Auto-select first category with queries if nothing is selected
       if (allQueries.length > 0 && !selectedCategory) {
-        // Find the first category that has queries
         const firstCategoryWithQueries = Object.keys(newQueriesByCategory).find(cat => 
           newQueriesByCategory[cat] && newQueriesByCategory[cat].length > 0
         );
@@ -252,28 +200,9 @@ const KQLLibrary = () => {
     } catch (error) {
       console.error("Error fetching queries:", error);
       setLoadingError("Failed to load queries. Please try again later.");
-      setQueries([]);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Special case for mapping categories in Defender for Cloud Apps
-  const mapQueryCategory = (query: Query): Query => {
-    // If the query is from Cloud Apps but uses different categories, map them
-    if ((query.category === "Email Security" || 
-         query.category === "Data Protection" || 
-         query.category === "Cloud Security") && 
-        !categories.includes(query.category)) {
-      
-      return {
-        ...query,
-        originalCategory: query.category, // Save original for reference
-        category: "Defender for Cloud Apps"
-      };
-    }
-    
-    return query;
   };
 
   // Load queries when component mounts
@@ -322,7 +251,7 @@ const KQLLibrary = () => {
     }
   }, [selectedCategory, selectedSubCategory, queries, selectedQuery]);
 
-  // Custom handler to ensure state consistency when setting the subcategory
+  // Handler to ensure state consistency when setting the subcategory
   const handleSetSubCategory = (subcategoryKey: string | null) => {
     if (subcategoryKey === null) {
       setSelectedSubCategory(null);
@@ -341,20 +270,20 @@ const KQLLibrary = () => {
     setSelectedSubCategory(subcategoryKey);
   };
 
-  // Close search modal and reset search term
+  // Handle search modal operations
   const handleCloseSearch = () => {
     setIsSearchModalOpen(false);
     setSearchTerm('');
   };
 
-  // Simple debug component for development
+  // Debug component
   const renderDebugInfo = () => {
     if (process.env.NODE_ENV === 'production') return null;
     
     return (
       <div className="fixed bottom-2 right-2 bg-black/70 text-white p-2 text-xs rounded z-50">
         <div>Total Queries: {queries.length}</div>
-        <div>Categories with queries: {Object.keys(queriesByCategory).join(', ')}</div>
+        <div>Categories with queries: {Object.keys(queriesByCategory).filter(cat => queriesByCategory[cat]?.length > 0).join(', ')}</div>
         <div>Selected Category: {selectedCategory || 'None'}</div>
         <div>
           Selected Category Queries: {selectedCategory && queriesByCategory[selectedCategory] 
@@ -367,7 +296,7 @@ const KQLLibrary = () => {
     );
   };
 
-  // Handle force reload button
+  // Handle force reload
   const handleForceReload = () => {
     console.log("Force reloading queries...");
     fetchAllQueries();
@@ -380,7 +309,7 @@ const KQLLibrary = () => {
 
       {/* Main content area with sidebar and query display */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Two-panel sidebar navigation */}
+        {/* Sidebar navigation */}
         <SidebarNavigation 
           categories={categories}
           categoryInfo={categoryInfo}
@@ -416,7 +345,7 @@ const KQLLibrary = () => {
         </div>
       </div>
 
-      {/* Enhanced Search Modal */}
+      {/* Search Modal */}
       <SearchModal 
         isOpen={isSearchModalOpen}
         onClose={handleCloseSearch}
@@ -433,7 +362,7 @@ const KQLLibrary = () => {
         setSelectedQuery={setSelectedQuery}
       />
       
-      {/* Debug info for development */}
+      {/* Debug info */}
       {renderDebugInfo()}
     </div>
   );
