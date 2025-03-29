@@ -18,6 +18,31 @@ const parseSubcategoryKey = (key: string | null) => {
   return { category, subcategory };
 };
 
+const updateSubcategories = (queriesData: Query[]) => {
+  // Create a map to store subcategories for each category
+  const subcategoriesByCategory: Record<string, Set<string>> = {};
+  
+  // Extract subcategories from queries
+  queriesData.forEach(query => {
+    if (!query.category || !query.subCategory) return;
+    
+    if (!subcategoriesByCategory[query.category]) {
+      subcategoriesByCategory[query.category] = new Set<string>();
+    }
+    
+    subcategoriesByCategory[query.category].add(query.subCategory);
+  });
+  
+  // Update the categoryInfo with the extracted subcategories
+  Object.keys(subcategoriesByCategory).forEach(category => {
+    if (categoryInfo[category]) {
+      categoryInfo[category].subCategories = Array.from(subcategoriesByCategory[category]).sort();
+    }
+  });
+  
+  console.log("Updated subcategories from queries:", subcategoriesByCategory);
+};
+
 const KQLLibrary = () => {
   const [queries, setQueries] = useState<Query[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -39,51 +64,76 @@ const KQLLibrary = () => {
       displayName: "Entra ID",
       textColor: "text-blue-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: ["Conditional Access", "Applications", "Authentication", "Authentication Methods", "Roles", "Governance", "Guests", "Devices"],
+      subCategories: [], // Empty array - will be populated dynamically
       fileName: "entraid.json"
     },
     "Defender for Identity": {
       displayName: "Defender for Identity",
       textColor: "text-yellow-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [],
+      subCategories: [], // Empty array - will be populated dynamically
       fileName: "defenderforidentity.json"
     },
     "Defender for Endpoint": {
       displayName: "Defender for Endpoint",
       textColor: "text-green-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [],
+      subCategories: [], // Empty array - will be populated dynamically
       fileName: "defenderforendpoint.json"
     },
     "Defender for Office 365": {
       displayName: "Defender for Office 365",
       textColor: "text-orange-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [],
+      subCategories: [], // Empty array - will be populated dynamically
       fileName: "defenderforoffice365.json"
     },
     "Defender for Cloud Apps": {
       displayName: "Defender for Cloud Apps",
       textColor: "text-purple-400", 
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [],
+      subCategories: [], // Empty array - will be populated dynamically
       fileName: "defenderforcloudapps.json"
     },
     "Sentinel": {
       displayName: "Sentinel",
       textColor: "text-red-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [],
+      subCategories: [], // Empty array - will be populated dynamically
       fileName: "sentinel.json"
     },
     "Intune": {
       displayName: "Intune",
       textColor: "text-cyan-400",
       buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: ["Android Enterprise", "Compliance", "Defender for Endpoint", "Governance"],
+      subCategories: [], // Empty array - will be populated dynamically
       fileName: "intune.json"
     }
+  };
+
+  const updateSubcategories = (queriesData: Query[]) => {
+    // Create a map to store subcategories for each category
+    const subcategoriesByCategory: Record<string, Set<string>> = {};
+    
+    // Extract subcategories from queries
+    queriesData.forEach(query => {
+      if (!query.category || !query.subCategory) return;
+      
+      if (!subcategoriesByCategory[query.category]) {
+        subcategoriesByCategory[query.category] = new Set<string>();
+      }
+      
+      subcategoriesByCategory[query.category].add(query.subCategory);
+    });
+    
+    // Update the categoryInfo with the extracted subcategories
+    Object.keys(subcategoriesByCategory).forEach(category => {
+      if (categoryInfo[category]) {
+        categoryInfo[category].subCategories = Array.from(subcategoriesByCategory[category]).sort();
+      }
+    });
+    
+    console.log("Updated subcategories:", subcategoriesByCategory);
   };
 
   // Try multiple file name patterns for each category
@@ -181,6 +231,8 @@ const KQLLibrary = () => {
         }
       });
       
+      updateSubcategories(allQueries);
+
       console.log(`Total queries loaded: ${allQueries.length}`);
       setQueries(allQueries);
       setQueriesByCategory(newQueriesByCategory);
