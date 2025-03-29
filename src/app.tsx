@@ -1,4 +1,4 @@
-// src/app.tsx - Core fix for JSON loading issues
+// src/app.tsx - Fully updated with dynamic category and file loading
 import React, { useState, useEffect } from 'react';
 
 // Import types
@@ -28,66 +28,18 @@ const KQLLibrary = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [queriesByCategory, setQueriesByCategory] = useState<Record<string, Query[]>>({});
+  
+  // Initialize categories dynamically from queries instead of hardcoding
+  const [categories, setCategories] = useState<string[]>([]);
+  
+  // Initialize categoryInfo with more flexibility
+  const [categoryInfo, setCategoryInfo] = useState<Record<string, CategoryInfo>>({});
 
-  const categories = [
-    "Entra ID", "Defender for Identity", "Defender for Endpoint",
-    "Defender for Office 365", "Defender for Cloud Apps", "Sentinel", "Intune"
-  ];
-
-  const categoryInfo: Record<string, CategoryInfo> = {
-    "Entra ID": {
-      displayName: "Entra ID",
-      textColor: "text-blue-400",
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Will be populated dynamically
-      fileName: "entraid.json"
-    },
-    "Defender for Identity": {
-      displayName: "Defender for Identity",
-      textColor: "text-yellow-400",
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Will be populated dynamically
-      fileName: "defenderforidentity.json"
-    },
-    "Defender for Endpoint": {
-      displayName: "Defender for Endpoint",
-      textColor: "text-green-400",
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Will be populated dynamically
-      fileName: "defenderforendpoint.json"
-    },
-    "Defender for Office 365": {
-      displayName: "Defender for Office 365",
-      textColor: "text-orange-400",
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Will be populated dynamically
-      fileName: "defenderforoffice365.json"
-    },
-    "Defender for Cloud Apps": {
-      displayName: "Defender for Cloud Apps",
-      textColor: "text-purple-400", 
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Will be populated dynamically
-      fileName: "defenderforcloudapps.json"
-    },
-    "Sentinel": {
-      displayName: "Sentinel",
-      textColor: "text-red-400",
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Will be populated dynamically
-      fileName: "sentinel.json"
-    },
-    "Intune": {
-      displayName: "Intune",
-      textColor: "text-cyan-400",
-      buttonBg: "bg-gray-800 hover:bg-gray-700",
-      subCategories: [], // Will be populated dynamically
-      fileName: "intune.json"
-    }
-  };
-
-  // Function to update subcategories based on query data
-  const updateSubcategories = (queriesData: Query[]) => {
+  // Function to update categories, categoryInfo and subcategories based on loaded queries
+  const updateCategoriesAndInfo = (queriesData: Query[]) => {
+    // Extract unique categories from loaded queries
+    const uniqueCategories = [...new Set(queriesData.map(q => q.category))].sort();
+    
     // Create a map to store subcategories for each category
     const subcategoriesByCategory: Record<string, Set<string>> = {};
     
@@ -102,14 +54,43 @@ const KQLLibrary = () => {
       subcategoriesByCategory[query.category].add(query.subCategory);
     });
     
-    // Update the categoryInfo with the extracted subcategories
-    Object.keys(subcategoriesByCategory).forEach(category => {
-      if (categoryInfo[category]) {
-        categoryInfo[category].subCategories = Array.from(subcategoriesByCategory[category]).sort();
-      }
+    // Create or update categoryInfo
+    const newCategoryInfo: Record<string, CategoryInfo> = {};
+    
+    // Define color schemes for different categories
+    const colorSchemes: Record<string, { textColor: string, buttonBg: string }> = {
+      "Entra ID": { textColor: "text-blue-400", buttonBg: "bg-gray-800 hover:bg-gray-700" },
+      "Defender for Identity": { textColor: "text-yellow-400", buttonBg: "bg-gray-800 hover:bg-gray-700" },
+      "Defender for Endpoint": { textColor: "text-green-400", buttonBg: "bg-gray-800 hover:bg-gray-700" },
+      "Defender for Office 365": { textColor: "text-orange-400", buttonBg: "bg-gray-800 hover:bg-gray-700" },
+      "Defender for Cloud Apps": { textColor: "text-purple-400", buttonBg: "bg-gray-800 hover:bg-gray-700" },
+      "Sentinel": { textColor: "text-red-400", buttonBg: "bg-gray-800 hover:bg-gray-700" },
+      "Intune": { textColor: "text-cyan-400", buttonBg: "bg-gray-800 hover:bg-gray-700" }
+    };
+    
+    // Apply default colors for new/unknown categories
+    const defaultColors = { textColor: "text-indigo-400", buttonBg: "bg-gray-800 hover:bg-gray-700" };
+    
+    // Create category info for each unique category
+    uniqueCategories.forEach(category => {
+      const colors = colorSchemes[category] || defaultColors;
+      
+      newCategoryInfo[category] = {
+        displayName: category,
+        textColor: colors.textColor,
+        buttonBg: colors.buttonBg,
+        subCategories: subcategoriesByCategory[category] 
+          ? Array.from(subcategoriesByCategory[category]).sort() 
+          : [],
+        fileName: "" // We no longer need this since we're loading all files dynamically
+      };
     });
     
-    console.log("Updated subcategories:", subcategoriesByCategory);
+    setCategories(uniqueCategories);
+    setCategoryInfo(newCategoryInfo);
+    
+    console.log("Updated categories:", uniqueCategories);
+    console.log("Updated category info:", newCategoryInfo);
   };
 
   // Fixed function to fetch all queries
@@ -118,20 +99,30 @@ const KQLLibrary = () => {
     setLoadingError(null);
     
     try {
+      // Hardcoded list of all JSON files in the queries directory
+      // This is the simplest approach for a fixed set of files
+      const queryFiles = [
+        'defenderforcloudapps.json',
+        'defenderforidentity.json',
+        'defenderforoffice365.json',
+        'entraid.json',
+        'intune.json',
+        'mde-attacksurfacereduction.json',
+        'mde-endpoint.json',
+        'mde-governance.json',
+        'mde-smartscreen.json',
+        'sentinel.json'
+      ];
+      
       const newQueriesByCategory: Record<string, Query[]> = {};
       const allQueries: Query[] = [];
       
-      // Process each category with proper error handling
-      await Promise.all(categories.map(async (category) => {
-        // Construct file path based on category
-        const fileName = categoryInfo[category]?.fileName || 
-                        `${category.toLowerCase().replace(/\s+/g, '').replace(/ for /g, 'for')}.json`;
-        
+      // Fetch and process each JSON file
+      await Promise.all(queryFiles.map(async (fileName) => {
         const filePath = `/queries/${fileName}`;
-        console.log(`Attempting to load: ${filePath}`);
+        console.log(`Loading: ${filePath}`);
         
         try {
-          // Add cache-busting parameter and proper error handling
           const response = await fetch(filePath + `?t=${Date.now()}`);
           
           if (!response.ok) {
@@ -139,48 +130,47 @@ const KQLLibrary = () => {
             return;
           }
           
-          // Get the text content first to properly handle JSON parsing errors
           const text = await response.text();
           if (!text || text.trim() === '') {
             console.warn(`Empty response from ${fileName}`);
-            newQueriesByCategory[category] = [];
             return;
           }
           
           try {
-            // Parse the JSON data
+            // Parse the JSON data - could be an array or a single object
             const data = JSON.parse(text);
             
-            if (!Array.isArray(data)) {
-              console.warn(`Invalid data format in ${fileName}, expected array`);
-              newQueriesByCategory[category] = [];
-              return;
-            }
+            // Handle both array and single object formats
+            const queryArray = Array.isArray(data) ? data : [data];
             
-            // Map queries to ensure consistent category naming
-            const categoryQueries = data.map(query => ({
-              ...query,
-              // Ensure category is consistent with our predefined categories
-              category: query.category === category ? query.category : category
-            }));
+            // Process each query
+            queryArray.forEach(query => {
+              if (!query.category || !query.title || !query.query) {
+                console.warn(`Skipping invalid query in ${fileName}`, query);
+                return;
+              }
+              
+              // Initialize category array if it doesn't exist
+              if (!newQueriesByCategory[query.category]) {
+                newQueriesByCategory[query.category] = [];
+              }
+              
+              // Add the query to its category
+              newQueriesByCategory[query.category].push(query);
+              allQueries.push(query);
+            });
             
-            // Store the queries for this category
-            newQueriesByCategory[category] = categoryQueries;
-            allQueries.push(...categoryQueries);
-            
-            console.log(`Successfully loaded ${categoryQueries.length} queries for ${category}`);
+            console.log(`Successfully loaded ${queryArray.length} queries from ${fileName}`);
           } catch (parseError) {
             console.error(`Error parsing JSON from ${fileName}:`, parseError);
-            newQueriesByCategory[category] = [];
           }
         } catch (fetchError) {
           console.error(`Error fetching ${fileName}:`, fetchError);
-          newQueriesByCategory[category] = [];
         }
       }));
       
-      // Update subcategories based on loaded queries
-      updateSubcategories(allQueries);
+      // Update categories and subcategories based on loaded queries
+      updateCategoriesAndInfo(allQueries);
       
       console.log(`Total queries loaded: ${allQueries.length}`);
       setQueriesByCategory(newQueriesByCategory);
