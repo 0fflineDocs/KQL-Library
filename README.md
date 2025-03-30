@@ -26,3 +26,16 @@ The application uses a custom Dracula-inspired color theme:
 | Cyan | `#8be9fd` | Button focus rings; Selected button outlines; Tag text; Copy button default state |
 | Dark Gray | `#282a36` | Background (via Tailwind's gray-950) |
 | Medium Gray | `#44475a` | Card backgrounds, button backgrounds (via Tailwind's gray-900, gray-800) |
+
+## 🙏 Acknowledgments
+
+- Special thanks to the open-source community for the tools and libraries that made this project possible
+
+## 💻 Contact
+
+- LinkedIn: [Simon Håkansson](https://www.linkedin.com/in/simon-h%C3%A5kansson-20163b137/)
+- Bluesky: [simonhakansson.com](https://bsky.app/profile/simonhakansson.com)
+- X: [@0fflineDocs](https://x.com/0fflineDocs)
+- Email: [simon.ludvig.hakansson@gmail.com](mailto:simon.ludvig.hakansson@gmail.com)
+- GitHub: [0fflineDocs](https://github.com/0fflineDocs/)
+
