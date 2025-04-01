@@ -63,22 +63,6 @@
       "subCategory": "Compliance Reporting",
       "tags": ["compliance", "osversion"]
     },
-    {
-        "title": "Non-Compliant Devices",
-        "description": "Summarizes the count of non-compliant devices by OS description and version.",
-        "query": "IntuneDeviceComplianceOrg \n| where isnotempty(DeviceName)\n| where ComplianceState == \"Not compliant\"\n| summarize count() by OSDescription, OSVersion",
-        "category": "Intune",
-        "subCategory": "Compliance Reporting",
-        "tags": ["compliance", "non-compliant", "osversion"]
-      },
-      {
-        "title": "Compliance Failures by Operating System",
-        "description": "Summarizes compliance failures by operating system.",
-        "query": "let ComplianceLogs=\nIntuneOperationalLogs \n| where OperationName == \"Compliance\" \n| project TimeGenerated, Properties;\nComplianceLogs\n| sort by TimeGenerated desc\n| join (\nComplianceLogs\n| extend myJson = todynamic(Properties)\n| project-away Properties\n| extend IntuneDeviceId=tostring(myJson[\"IntuneDeviceId\"])\n| project TimeGenerated, IntuneDeviceId\n| summarize TimeGenerated=max(TimeGenerated) by IntuneDeviceId    \n) on TimeGenerated\n| project-away TimeGenerated1, IntuneDeviceId  \n| extend myJson=todynamic(Properties)\n| project-away Properties\n| extend DeviceOperatingSystem=tostring(myJson[\"DeviceOperatingSystem\"])\n| summarize FailureCount=count() by DeviceOperatingSystem\n| sort by FailureCount desc",
-        "category": "Intune",
-        "subCategory": "Compliance Reporting",
-        "tags": ["compliance", "osversion"]
-      },
       {
         "title": "Defender for Endpoint Compliance Health",
         "description": "Lists devices with MDE threat levels that are not secured.",
