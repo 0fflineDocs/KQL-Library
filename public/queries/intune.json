@@ -44,7 +44,7 @@
       "description": "Summarizes the count of compliant devices by OS description and version.",
       "query": "IntuneDeviceComplianceOrg \n| where isnotempty(DeviceName)\n| where ComplianceState == \"Compliant\"\n| summarize count() by OSDescription, OSVersion",
       "category": "Intune",
-      "subCategory": "Compliance",
+      "subCategory": "Compliance Reporting",
       "tags": ["compliance", "osversion"]
     },
     {
@@ -52,7 +52,7 @@
       "description": "Summarizes the count of non-compliant devices by OS description and version.",
       "query": "IntuneDeviceComplianceOrg \n| where isnotempty(DeviceName)\n| where ComplianceState == \"Not compliant\"\n| summarize count() by OSDescription, OSVersion",
       "category": "Intune",
-      "subCategory": "Compliance",
+      "subCategory": "Compliance Reporting",
       "tags": ["compliance", "non-compliant", "osversion"]
     },
     {
@@ -60,7 +60,7 @@
       "description": "Summarizes compliance failures by operating system.",
       "query": "let ComplianceLogs=\nIntuneOperationalLogs \n| where OperationName == \"Compliance\" \n| project TimeGenerated, Properties;\nComplianceLogs\n| sort by TimeGenerated desc\n| join (\nComplianceLogs\n| extend myJson = todynamic(Properties)\n| project-away Properties\n| extend IntuneDeviceId=tostring(myJson[\"IntuneDeviceId\"])\n| project TimeGenerated, IntuneDeviceId\n| summarize TimeGenerated=max(TimeGenerated) by IntuneDeviceId    \n) on TimeGenerated\n| project-away TimeGenerated1, IntuneDeviceId  \n| extend myJson=todynamic(Properties)\n| project-away Properties\n| extend DeviceOperatingSystem=tostring(myJson[\"DeviceOperatingSystem\"])\n| summarize FailureCount=count() by DeviceOperatingSystem\n| sort by FailureCount desc",
       "category": "Intune",
-      "subCategory": "Compliance",
+      "subCategory": "Compliance Reporting",
       "tags": ["compliance", "osversion"]
     },
     {
@@ -68,7 +68,7 @@
         "description": "Summarizes the count of non-compliant devices by OS description and version.",
         "query": "IntuneDeviceComplianceOrg \n| where isnotempty(DeviceName)\n| where ComplianceState == \"Not compliant\"\n| summarize count() by OSDescription, OSVersion",
         "category": "Intune",
-        "subCategory": "Compliance",
+        "subCategory": "Compliance Reporting",
         "tags": ["compliance", "non-compliant", "osversion"]
       },
       {
@@ -76,7 +76,7 @@
         "description": "Summarizes compliance failures by operating system.",
         "query": "let ComplianceLogs=\nIntuneOperationalLogs \n| where OperationName == \"Compliance\" \n| project TimeGenerated, Properties;\nComplianceLogs\n| sort by TimeGenerated desc\n| join (\nComplianceLogs\n| extend myJson = todynamic(Properties)\n| project-away Properties\n| extend IntuneDeviceId=tostring(myJson[\"IntuneDeviceId\"])\n| project TimeGenerated, IntuneDeviceId\n| summarize TimeGenerated=max(TimeGenerated) by IntuneDeviceId    \n) on TimeGenerated\n| project-away TimeGenerated1, IntuneDeviceId  \n| extend myJson=todynamic(Properties)\n| project-away Properties\n| extend DeviceOperatingSystem=tostring(myJson[\"DeviceOperatingSystem\"])\n| summarize FailureCount=count() by DeviceOperatingSystem\n| sort by FailureCount desc",
         "category": "Intune",
-        "subCategory": "Compliance",
+        "subCategory": "Compliance Reporting",
         "tags": ["compliance", "osversion"]
       },
       {
@@ -110,5 +110,119 @@
         "category": "Intune",
         "subCategory": "Governance",
         "tags": ["configuration", "intuneauditlogs"]
-      }
+      },
+  {
+    "title": "Device Count by OS Version",
+    "description": "Visualizes the distribution of devices by Windows OS version in your environment",
+    "query": "UCClient\n| summarize Count = count() by OSVersion\n| render columnchart",
+    "category": "Intune",
+    "subCategory": "Update Compliance",
+    "tags": [
+      "Log Analytics",
+      "OSVersion",
     ]
+  },
+  {
+    "title": "Update Alert Distribution",
+    "description": "Displays the distribution of Windows update alerts by alert subtype",
+    "query": "UCUpdateAlert\n| summarize count() by AlertSubtype\n| render columnchart",
+    "category": "Intune",
+    "subCategory": "Update Compliance",
+    "tags": [
+      "Log Analytics",
+      "Update alerts"
+    ]
+  },
+  {
+    "title": "Safeguard Hold by Target Version",
+    "description": "Summarizes the count of Safeguard Hold alerts by target Windows feature update version",
+    "query": "UCUpdateAlert\n| where UpdateCategory == \"WindowsFeatureUpdate\" and AlertSubtype == \"SafeguardHold\"\n| summarize count() by TargetVersion",
+    "category": "Intune",
+    "subCategory": "Update Compliance",
+    "tags": [
+      "Log Analytics",
+      "feature updates",
+      "Safeguard Hold"
+    ]
+  },
+  {
+    "title": "Detailed Safeguard Hold Analysis",
+    "description": "Provides a detailed breakdown of Safeguard Holds by ID with device count for each hold",
+    "query": "let _SafeguardHold = \"SafeguardHold\";\nlet _SafeguardHoldID = \"ALL\";\nlet SafeguardHolds = UCUpdateAlert\n    | where AlertSubtype == _SafeguardHold\n    | extend SafeguardHoldIDs = parse_json(AlertData).safeguardHoldIDs\n    | extend TotalSafeguards = array_length(SafeguardHoldIDs)\n    | mv-expand SafeguardHoldID=SafeguardHoldIDs\n    | extend SafeguardHoldID=iff(isempty(SafeguardHoldID), \"Unknown\", tostring(SafeguardHoldID))\n    | extend DeviceDetail = \"View more\"\n    | summarize arg_max(TimeGenerated, *) by AzureADDeviceId, SafeguardHoldID\n    | summarize DeviceCount=count(AzureADDeviceId) by SafeguardHoldID, DeviceDetail\n    | where iff(_SafeguardHoldID has \"ALL\", true, _SafeguardHoldID has SafeguardHoldID)\n    | order by DeviceCount desc\n    | project-reorder SafeguardHoldID, DeviceCount, DeviceDetail;\nSafeguardHolds;",
+    "category": "Update Compliance",
+    "subCategory": "Safeguard Holds",
+    "tags": [
+      "Log Analytics",
+      "feature updates",
+      "Safeguard Hold"
+    ]
+  },
+  {
+    "title": "Safeguard Hold Snapshot Analysis",
+    "description": "Analyzes Safeguard Holds from a specific point in time with device counts by hold ID",
+    "query": "let _SnapshotTime = datetime(2023-01-01T06:00:00Z);\nlet _SafeguardHold = \"SafeguardHold\";\nlet _SafeguardHoldID = \"ALL\";\nlet SafeguardHolds = UCUpdateAlert\n    | where TimeGenerated >= _SnapshotTime\n    | where AlertSubtype == _SafeguardHold\n    | extend SafeguardHoldIDs = parse_json(AlertData).safeguardHoldIDs\n    | extend TotalSafeguards = array_length(SafeguardHoldIDs)\n    | mv-expand SafeguardHoldID=SafeguardHoldIDs\n    | extend SafeguardHoldID=iff(isempty(SafeguardHoldID), \"Unknown\", tostring(SafeguardHoldID))\n    | extend DeviceDetail = \"View more\"\n    | summarize arg_max(TimeGenerated, *) by AzureADDeviceId, SafeguardHoldID\n    | summarize DeviceCount=count(AzureADDeviceId) by SafeguardHoldID, DeviceDetail\n    | where iff(_SafeguardHoldID has \"ALL\", true, _SafeguardHoldID has SafeguardHoldID)\n    | order by DeviceCount desc\n    | project-reorder SafeguardHoldID, DeviceCount, DeviceDetail;\nSafeguardHolds;",
+    "category": "Intune",
+    "subCategory": "Update Compliance",
+    "tags": [
+      "Log Analytics",
+      "feature updates",
+      "Safeguard Hold"
+    ]
+  },
+  {
+    "title": "Feature Update Deployment Progress",
+    "description": "Tracks the deployment progress of Windows feature updates across your organization",
+    "query": "UCClient\n| where isnotempty(OSTargetBuild)\n| summarize DeviceCount=count() by OSVersion, OSTargetBuild, DeploymentStatus\n| order by OSVersion asc, OSTargetBuild desc",
+    "category": "Intune",
+    "subCategory": "Update Compliance",
+    "tags": [
+      "Log Analytics",
+      "feature updates"
+    ]
+  },
+  {
+    "title": "Update Compliance Status Overview",
+    "description": "Provides an overview of update compliance status across all managed devices",
+    "query": "UCClient\n| summarize\n    Total=count(),\n    Compliant=countif(OSComplianceStatus == \"Compliant\"),\n    NonCompliant=countif(OSComplianceStatus == \"Not Compliant\")\n| extend ComplianceRate = round(100.0 * Compliant / Total, 2)\n| project Total, Compliant, NonCompliant, ComplianceRate",
+    "category": "Intune",
+    "subCategory": "Update Compliance",
+    "tags": [
+      "Log Analytics",
+      "Update Compliance"
+    ]
+  },
+  {
+    "title": "Device Scan Failures",
+    "description": "Identifies devices with Windows Update scan failures that need remediation",
+    "query": "UCUpdateAlert\n| where AlertSubtype == \"ScanFailed\"\n| summarize\n    LastFailure=max(TimeGenerated),\n    FailureCount=count()\n    by DeviceName, AzureADDeviceId, OSVersion\n| order by FailureCount desc",
+    "category": "Intune",
+    "subCategory": "Update Compliance",
+    "tags": [
+      "Log Analytics",
+      "scan failures"
+    ]
+  },
+  {
+    "title": "Windows Security Update Compliance",
+    "description": "Tracks compliance status specifically for security updates across your Windows devices",
+    "query": "UCClient\n| where isnotempty(SecurityUpdateComplianceStatus)\n| summarize DeviceCount=count() by SecurityUpdateComplianceStatus\n| render piechart",
+    "category": "Intune",
+    "subCategory": "Update Compliance",
+    "tags": [
+      "Log Analytics",
+      "compliance"
+    ]
+  },
+  {
+    "title": "Windows Update Connectivity Issues",
+    "description": "Identifies devices experiencing connectivity issues with Windows Update servers",
+    "query": "UCUpdateAlert\n| where AlertSubtype in (\"UpdateServiceConnectivityFailedAlert\", \"ContentDownloadFailed\")\n| summarize\n    LastFailure=max(TimeGenerated),\n    FailureCount=count(),\n    AlertTypes=make_set(AlertSubtype)\n    by DeviceName, AzureADDeviceId\n| order by FailureCount desc",
+    "category": "Intune",
+    "subCategory": "Update Compliance",
+    "tags": [
+      "Log Analytics",
+      "connectivity",
+      "troubleshooting"
+    ]
+  }
+]
