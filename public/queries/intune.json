@@ -133,8 +133,8 @@
     "title": "Detailed Safeguard Hold Analysis",
     "description": "Provides a detailed breakdown of Safeguard Holds by ID with device count for each hold",
     "query": "let _SafeguardHold = \"SafeguardHold\";\nlet _SafeguardHoldID = \"ALL\";\nlet SafeguardHolds = UCUpdateAlert\n    | where AlertSubtype == _SafeguardHold\n    | extend SafeguardHoldIDs = parse_json(AlertData).safeguardHoldIDs\n    | extend TotalSafeguards = array_length(SafeguardHoldIDs)\n    | mv-expand SafeguardHoldID=SafeguardHoldIDs\n    | extend SafeguardHoldID=iff(isempty(SafeguardHoldID), \"Unknown\", tostring(SafeguardHoldID))\n    | extend DeviceDetail = \"View more\"\n    | summarize arg_max(TimeGenerated, *) by AzureADDeviceId, SafeguardHoldID\n    | summarize DeviceCount=count(AzureADDeviceId) by SafeguardHoldID, DeviceDetail\n    | where iff(_SafeguardHoldID has \"ALL\", true, _SafeguardHoldID has SafeguardHoldID)\n    | order by DeviceCount desc\n    | project-reorder SafeguardHoldID, DeviceCount, DeviceDetail;\nSafeguardHolds;",
-    "category": "Update Compliance",
-    "subCategory": "Safeguard Holds",
+    "category": "Intune",
+    "subCategory": "Update Compliance",
     "tags": [
       "Log Analytics",
       "feature updates",
