@@ -27,8 +27,4 @@ The application uses a custom Dracula-inspired color theme:
 | Dark Gray | `#282a36` | Background (via Tailwind's gray-950) |
 | Medium Gray | `#44475a` | Card backgrounds, button backgrounds (via Tailwind's gray-900, gray-800) |
 
-## 🙏 Acknowledgments
-
-- Special thanks to the open-source community for the tools and libraries that made this project possible
-
 ---
