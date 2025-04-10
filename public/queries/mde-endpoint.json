@@ -124,5 +124,18 @@
       "SSH",
       "SYSTEM privileges"
     ]
+  },
+  {
+    "title": "Web Content Filtering Events",
+    "description": "Tracks network protection events from Exploit Guard on Windows devices",
+    "query": "DeviceEvents\n| where ActionType contains \\\"ExploitGuardNetworkProtection\\\"\n| extend ParsedFields=parse_json(AdditionalFields)\n| project DeviceName, ActionType, Timestamp, RemoteUrl, InitiatingProcessFileName, IsAudit=tostring(ParsedFields.IsAudit), ResponseCategory=tostring(ParsedFields.ResponseCategory), DisplayName=tostring(ParsedFields.DisplayName)",
+    "category": "Defender for Endpoint",
+    "subCategory": "Web Content Filtering",
+    "tags": [
+      "web content filtering",
+      "network protection",
+      "exploit guard",
+      "windows"
+    ]
   }
 ]
