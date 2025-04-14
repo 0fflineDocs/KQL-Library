@@ -81,7 +81,7 @@
   {
     "title": "Security Incident Tactics Analysis",
     "description": "Analyzes security incidents by counting the frequency of tactics used",
-    "query": "SecurityIncident\n    | summarize arg_max(TimeGenerated, *) by IncidentNumber\n    | extend TacticsArray = parse_json(AdditionalData).tactics\n    | mv-expand Tactic = TacticsArray\n    | summarize Total = count() by tostring(Tactic)\n    | sort by Total desc",
+    "query": "SecurityIncident\n| summarize arg_max(TimeGenerated, *) by IncidentNumber\n| extend TacticsArray = parse_json(AdditionalData).tactics\n| mv-expand Tactic = TacticsArray\n| summarize Total = count() by tostring(Tactic)\n| sort by Total desc",
     "category": "Sentinel",
     "subCategory": "Incident Management",
     "tags": [
