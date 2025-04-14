@@ -137,5 +137,32 @@
       "exploit guard",
       "windows"
     ]
+  },
+  {
+    "title": "Exploitable Software Vulnerabilities",
+    "description": "Lists software vulnerabilities with known exploits, including device and CVE details",
+    "query": "DeviceTvmSoftwareVulnerabilities\n| where ExploitabilityLevel == \"Exploit is available\"\n| project DeviceName, SoftwareName, SoftwareVersion, CveId, ExploitabilityLevel, Severity, PublishedDate\n| sort by PublishedDate desc",
+    "category": "Defender for Endpoint",
+    "subCategory": "Vulnerability Management",
+    "tags": [
+      "vulnerability",
+      "cve",
+      "exploit",
+      "defender"
+    ]
+  },
+  {
+    "title": "High and Critical Exploitable Vulnerabilities",
+    "description": "Summarizes the number of devices affected by high and critical severity vulnerabilities with known exploits",
+    "query": "DeviceTvmSoftwareVulnerabilities\n| where ExploitabilityLevel == \"Exploit is available\"\n| where Severity in (\"High\", \"Critical\")\n| summarize AffectedDevices = dcount(DeviceName) by CveId, Severity, ExploitabilityLevel\n| sort by AffectedDevices desc",
+    "category": "Defender for Endpoint",
+    "subCategory": "Vulnerability Management",
+    "tags": [
+      "vulnerability",
+      "cve",
+      "exploit",
+      "severity",
+      "defender"
+    ]
   }
 ]
