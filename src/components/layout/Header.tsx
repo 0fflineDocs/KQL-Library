@@ -30,11 +30,6 @@ const Header = ({ onOpenSearch }: HeaderProps) => {
           />
           
           <SocialIcon 
-            type="mail" 
-            href="mailto:simon.ludvig.hakansson@gmail.com" 
-          />
-          
-          <SocialIcon 
             type="github" 
             href="https://github.com/0fflineDocs/" 
           />
