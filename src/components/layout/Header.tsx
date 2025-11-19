@@ -23,17 +23,7 @@ const Header = ({ onOpenSearch }: HeaderProps) => {
             <Search className="w-5 h-5" />
           </Button>
 
-          {/* Social Media Icons using SimpleIcons */}
-          <SocialIcon 
-            type="twitter" 
-            href="https://x.com/0fflineDocs" 
-          />
-          
-          <SocialIcon 
-            type="bluesky" 
-            href="https://bsky.app/profile/simonhakansson.com" 
-          />
-          
+          {/* Social Media Icons using SimpleIcons */}        
           <SocialIcon 
             type="linkedin" 
             href="https://www.linkedin.com/in/simon-h%C3%A5kansson-20163b137/" 
