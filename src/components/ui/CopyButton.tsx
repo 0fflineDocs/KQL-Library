@@ -23,9 +23,11 @@ const CopyButton = ({ text, className = "" }: CopyButtonProps) => {
     <button
       onClick={handleCopy}
       className={cn(
-        "text-xs flex items-center gap-1 px-2 py-1 rounded-full transition-colors duration-300",
-        "bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-[#8be9fd]",
-        copied ? "text-[#50fa7b]" : "text-[#8be9fd]",
+        "inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border transition-colors duration-200",
+        "focus:outline-none focus:ring-1 focus:ring-slate-600/50",
+        copied 
+          ? "bg-emerald-500/8 text-emerald-400 border-emerald-500/20" 
+          : "bg-slate-800/50 text-slate-300 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600/50",
         className
       )}
       style={{ minWidth: '68px', justifyContent: 'center' }}

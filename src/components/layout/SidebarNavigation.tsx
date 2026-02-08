@@ -149,7 +149,7 @@ const SidebarNavigation = ({
   return (
     <div className="flex h-full">
       {/* Left panel: Categories and Subcategories */}
-      <div className="w-64 bg-gray-900 border-r border-gray-800 overflow-y-auto h-full">
+      <div className="w-64 bg-slate-900 border-r border-slate-800/50 overflow-y-auto h-full">
         <div className="p-2">
           {categories.map((category) => {
             const isExpanded = expandedCategories[category];
@@ -160,22 +160,22 @@ const SidebarNavigation = ({
               <div key={category} className="mb-1">
                 <Button
                   className={cn(
-                    "w-full p-2 rounded-md flex items-center justify-start",
-                    selectedCategory === category ? "bg-gray-800" : "hover:bg-gray-800/50"
+                    "w-full p-2 rounded-lg flex items-center justify-start transition-colors duration-200",
+                    selectedCategory === category ? "bg-slate-800" : "hover:bg-slate-800/50"
                   )}
                   onClick={() => toggleCategory(category)}
                 >
                   {isExpanded ? 
-                    <ChevronDown className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" /> : 
-                    <ChevronRight className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                    <ChevronDown className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" /> : 
+                    <ChevronRight className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" />
                   }
-                  <span className={`truncate text-left ${textColorClass}`}>
+                  <span className={`truncate text-left text-sm font-medium ${textColorClass}`}>
                     {categoryInfo[category]?.displayName || category}
                   </span>
                 </Button>
                 
                 {isExpanded && subcategories.length > 0 && (
-                  <div className="ml-2 pl-2 border-l border-gray-800 mt-1 mb-2">
+                  <div className="ml-2 pl-2 border-l border-slate-700/30 mt-1 mb-2">
                     {subcategories.map((subcategory) => {
                       const subcategoryKey = createSubcategoryKey(category, subcategory);
                       const isSelected = selectedSubCategory === subcategoryKey;
@@ -184,10 +184,10 @@ const SidebarNavigation = ({
                         <Button
                           key={subcategoryKey}
                           className={cn(
-                            "w-full p-1.5 pl-6 text-sm rounded flex items-center justify-start",
+                            "w-full p-1.5 pl-6 text-sm rounded-lg flex items-center justify-start transition-colors duration-200",
                             isSelected 
-                              ? "bg-gray-800 text-[#ff79c6] font-medium" 
-                              : "text-[#ff79c6] hover:bg-gray-800/30"
+                              ? "bg-slate-800 text-slate-100 font-medium" 
+                              : "text-slate-300 hover:bg-slate-800/50 hover:text-slate-200"
                           )}
                           onClick={() => handleSubcategorySelect(category, subcategory)}
                         >
@@ -204,13 +204,13 @@ const SidebarNavigation = ({
       </div>
 
       {/* Right panel: Queries */}
-      <div className="w-72 bg-gray-900/90 overflow-y-auto h-full">
+      <div className="w-72 bg-slate-900/90 overflow-y-auto h-full">
         <div className="p-2">
           {selectedCategory ? (
             currentQueries.length > 0 ? (
               <div>
-                <div className="p-2 border-b border-gray-800 mb-2">
-                  <h3 className="text-sm font-medium text-gray-400">
+                <div className="p-2 border-b border-slate-700/30 mb-2">
+                  <h3 className="text-sm font-medium text-slate-400">
                     {selectedSubCategory 
                       ? `${selectedCategory} / ${parseSubcategoryKey(selectedSubCategory).subcategory}` 
                       : selectedCategory}
@@ -221,10 +221,10 @@ const SidebarNavigation = ({
                   <Button
                     key={`${query.category}-${query.title}-${index}`}
                     className={cn(
-                      "w-full p-2 text-sm rounded flex items-center justify-start my-1",
+                      "w-full p-2 text-sm rounded-lg flex items-center justify-start my-1 transition-colors duration-200",
                       selectedQuery?.title === query.title && selectedQuery?.category === query.category
-                        ? "bg-gray-800 text-[#50fa7b]" 
-                        : "text-gray-300 hover:bg-gray-800/30"
+                        ? "bg-slate-800 text-slate-100" 
+                        : "text-slate-300 hover:bg-slate-800/50 hover:text-slate-200"
                     )}
                     onClick={() => handleQuerySelect(query)}
                   >
@@ -233,12 +233,12 @@ const SidebarNavigation = ({
                 ))}
               </div>
             ) : (
-              <div className="text-center p-6 text-gray-500">
+              <div className="text-center p-6 text-slate-500">
                 No queries available for this {selectedSubCategory ? "subcategory" : "category"}
               </div>
             )
           ) : (
-            <div className="text-center p-6 text-gray-500">
+            <div className="text-center p-6 text-slate-500">
               Select a category to view available queries
             </div>
           )}

@@ -2,40 +2,45 @@
 module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
+    "./index.html",
   ],
   theme: {
     extend: {
+      fontFamily: {
+        'space-grotesk': ['Space Grotesk', 'sans-serif'],
+      },
       colors: {
         primary: {
-          DEFAULT: '#6366f1', // Indigo 500
-          foreground: '#ffffff', // White
+          DEFAULT: '#60A5FA', // Blue 400
+          foreground: '#ffffff',
         },
         secondary: {
-          DEFAULT: '#d1d5db', // Gray 300
-          foreground: '#374151', // Gray 800
+          DEFAULT: '#CBD5E1', // Slate 300
+          foreground: '#1E293B', // Slate 800
         },
         destructive: {
-          DEFAULT: '#dc2626',  // Red 600
+          DEFAULT: '#dc2626',
           foreground: '#fff',
         },
         muted: {
-          DEFAULT: '#f3f4f6', // Gray 100
-          foreground: '#6b7280', // Gray 500
+          DEFAULT: '#334155', // Slate 700
+          foreground: '#94A3B8', // Slate 400
         },
         accent: {
-          DEFAULT: '#f9fafb', // Gray 50
-          foreground: '#1f2937' // Gray 900
+          DEFAULT: '#1E293B', // Slate 800
+          foreground: '#F8FAFC' // Slate 50
         },
         card: {
-          DEFAULT: '#fff',
-          foreground: '#1f2937'
+          DEFAULT: '#1E293B', // Slate 800
+          foreground: '#F8FAFC' // Slate 50
         },
-        border: '#e5e7eb', // Gray 200
-        input: '#f9fafb', // Gray 50
+        border: '#334155', // Slate 700
+        input: '#1E293B', // Slate 800
       },
       borderRadius: {
         md: '0.375rem', // 6px
-        lg: '0.5rem'    // 8px
+        lg: '0.5rem',   // 8px
+        xl: '0.75rem'   // 12px
       }
     },
   },

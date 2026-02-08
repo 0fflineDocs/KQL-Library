@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import CopyButton from '@/components/ui/CopyButton';
 import { Query } from '@/types';
 
@@ -9,7 +10,7 @@ interface QueryDisplayProps {
 const QueryDisplay = ({ query }: QueryDisplayProps) => {
   if (!query) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
+      <div className="flex items-center justify-center h-full text-slate-400">
         Select a query from the sidebar to view details
       </div>
     );
@@ -26,18 +27,23 @@ const QueryDisplay = ({ query }: QueryDisplayProps) => {
   };
 
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="h-full overflow-y-auto p-6"
+    >
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-[#50fa7b] mb-2">{query.title}</h2>
-          <p className="text-[#ffb86c] mb-4">{query.description}</p>
+          <h2 className="text-xl font-semibold text-slate-50 mb-2">{query.title}</h2>
+          <p className="text-slate-300 mb-4">{query.description}</p>
           
           {query.tags && query.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {query.tags.map((tag, index) => (
                 <span 
                   key={index} 
-                  className="px-2 py-1 bg-gray-800 rounded-full text-[#8be9fd] text-xs"
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800/50 text-slate-300"
                 >
                   {tag}
                 </span>
@@ -47,31 +53,31 @@ const QueryDisplay = ({ query }: QueryDisplayProps) => {
           
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400">Category:</span>
-              <span className="text-sm text-[#bd93f9]">{query.category}</span>
+              <span className="text-sm text-slate-400">Category:</span>
+              <span className="text-sm text-slate-200">{query.category}</span>
             </div>
             {query.subCategory && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">Subcategory:</span>
-                <span className="text-sm text-[#ff79c6]">{query.subCategory}</span>
+                <span className="text-sm text-slate-400">Subcategory:</span>
+                <span className="text-sm text-slate-200">{query.subCategory}</span>
               </div>
             )}
           </div>
         </div>
         
-        <div className="bg-[#1e1e2e] rounded-md border border-gray-800 overflow-hidden">
-          <div className="bg-gray-800 py-3 px-4 flex justify-between items-center">
-            <h3 className="text-base font-medium text-white">KQL Query</h3>
+        <div className="rounded-lg border border-slate-700/50 bg-slate-800/50 overflow-hidden">
+          <div className="bg-slate-800 py-3 px-4 flex justify-between items-center border-b border-slate-700/30">
+            <h3 className="text-sm font-semibold text-slate-100">KQL Query</h3>
             <CopyButton text={query.query} />
           </div>
           <div className={`w-full overflow-auto ${getCardContentHeight(query.query)}`}>
-            <pre className="p-4 text-sm text-gray-200 whitespace-pre-wrap break-words h-full">
+            <pre className="p-4 text-sm text-slate-200 font-mono whitespace-pre-wrap break-words h-full">
               <code>{query.query}</code>
             </pre>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

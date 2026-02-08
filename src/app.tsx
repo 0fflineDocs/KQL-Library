@@ -82,17 +82,17 @@ const KQLLibrary = () => {
     
     // Define color schemes for different categories
     const colorSchemes: Record<string, { textColor: string, buttonBg: string }> = {
-      "Entra ID": { textColor: "text-blue-400", buttonBg: "bg-gray-800 hover:bg-gray-700" },
-      "Defender for Identity": { textColor: "text-yellow-400", buttonBg: "bg-gray-800 hover:bg-gray-700" },
-      "Defender for Endpoint": { textColor: "text-green-400", buttonBg: "bg-gray-800 hover:bg-gray-700" },
-      "Defender for Office 365": { textColor: "text-orange-400", buttonBg: "bg-gray-800 hover:bg-gray-700" },
-      "Defender for Cloud Apps": { textColor: "text-purple-400", buttonBg: "bg-gray-800 hover:bg-gray-700" },
-      "Sentinel": { textColor: "text-red-400", buttonBg: "bg-gray-800 hover:bg-gray-700" },
-      "Intune": { textColor: "text-cyan-400", buttonBg: "bg-gray-800 hover:bg-gray-700" }
+      "Entra ID": { textColor: "text-blue-400", buttonBg: "bg-slate-800 hover:bg-slate-700" },
+      "Defender for Identity": { textColor: "text-amber-400", buttonBg: "bg-slate-800 hover:bg-slate-700" },
+      "Defender for Endpoint": { textColor: "text-emerald-400", buttonBg: "bg-slate-800 hover:bg-slate-700" },
+      "Defender for Office 365": { textColor: "text-orange-400", buttonBg: "bg-slate-800 hover:bg-slate-700" },
+      "Defender for Cloud Apps": { textColor: "text-purple-400", buttonBg: "bg-slate-800 hover:bg-slate-700" },
+      "Sentinel": { textColor: "text-red-400", buttonBg: "bg-slate-800 hover:bg-slate-700" },
+      "Intune": { textColor: "text-cyan-400", buttonBg: "bg-slate-800 hover:bg-slate-700" }
     };
     
     // Apply default colors for new/unknown categories
-    const defaultColors = { textColor: "text-indigo-400", buttonBg: "bg-gray-800 hover:bg-gray-700" };
+    const defaultColors = { textColor: "text-slate-300", buttonBg: "bg-slate-800 hover:bg-slate-700" };
     
     // Create category info for each unique category (in sorted order)
     sortedCategories.forEach(category => {
@@ -325,7 +325,7 @@ const KQLLibrary = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950 text-gray-100 overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-900 text-slate-100 overflow-hidden">
       {/* Header */}
       <Header onOpenSearch={() => setIsSearchModalOpen(true)} />
 
@@ -345,17 +345,17 @@ const KQLLibrary = () => {
         />
 
         {/* Main content area */}
-        <div className="flex-1 overflow-hidden bg-gray-950">
+        <div className="flex-1 overflow-hidden bg-slate-900">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="text-gray-400 mb-4">Loading queries...</div>
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              <div className="text-slate-400 mb-4">Loading queries...</div>
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-400"></div>
             </div>
           ) : loadingError ? (
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-red-400 mb-4">{loadingError}</div>
               <button
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded"
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg transition-colors duration-200"
                 onClick={handleForceReload}
               >
                 Try Again

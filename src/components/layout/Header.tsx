@@ -9,14 +9,14 @@ interface HeaderProps {
 
 const Header = ({ onOpenSearch }: HeaderProps) => {
   return (
-    <header className="bg-gray-900 border-b border-gray-800 py-4 px-4">
-      <div className="container mx-auto flex items-center justify-between">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 text-transparent bg-clip-text">
+    <header className="sticky top-0 z-40 h-16 bg-slate-900/95 backdrop-blur-md border-b border-slate-800/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+        <h1 className="text-2xl font-bold font-space-grotesk text-slate-50">
           KQL Library
         </h1>
         <div className="flex items-center gap-3">
           <Button
-            className="text-gray-400 hover:text-gray-300 p-2 rounded-full hover:bg-gray-800/50"
+            className="text-slate-400 hover:text-slate-200 p-2 rounded-lg hover:bg-slate-800/50 transition-colors duration-200"
             onClick={onOpenSearch}
             title="Search"
           >

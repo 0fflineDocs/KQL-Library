@@ -15,8 +15,8 @@ const Button = ({
 }: ButtonProps) => (
   <button
     className={cn(
-      "inline-flex items-center justify-start rounded-md text-sm font-medium transition-colors",
-      "focus:outline-none focus:ring-1 focus:ring-[#8be9fd] focus:ring-offset-2 focus:ring-offset-gray-950",
+      "inline-flex items-center justify-start rounded-lg text-sm font-medium transition-colors duration-200",
+      "focus:outline-none focus:ring-1 focus:ring-slate-600/50 focus:ring-offset-2 focus:ring-offset-slate-900",
       "disabled:opacity-50 disabled:pointer-events-none",
       className
     )}
