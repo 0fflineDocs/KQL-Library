@@ -5,7 +5,7 @@ Featuring category-based organization and instant search capabilities.
 
 Built with **React, TypeScript**, and **Tailwind CSS**.
 
-<img width="1475" alt="KQL" src="https://github.com/user-attachments/assets/3fc8367f-9ab5-47b8-995b-0e0f2e79cbc4" />
+<img width="1964" height="848" alt="image" src="https://github.com/user-attachments/assets/42d7a311-4c6c-4303-bdc8-4d7749c84a36" />
 
 ## Features
 🗂️  Organize queries by category and subcategory.\
@@ -46,19 +46,5 @@ Built with **React, TypeScript**, and **Tailwind CSS**.
 | `@vitejs/plugin-react` | 5.1.3 | Vite React plugin |
 | `autoprefixer` | 10.4+ | CSS autoprefixer |
 | `postcss` | 8.4+ | CSS processor |
-
-## Color Scheme 🎨
-
-The application uses a custom Dracula-inspired color theme:
-
-| Color | Hex Code | Applied To |
-|-------|----------|------------|
-| Purple | `#bd93f9` | Main category button text |
-| Pink | `#ff79c6` | Subcategory button text |
-| Green | `#50fa7b` | Card titles; Copy button success state |
-| Orange | `#ffb86c` | Card descriptions/subtitles |
-| Cyan | `#8be9fd` | Button focus rings; Selected button outlines; Tag text; Copy button default state |
-| Dark Gray | `#282a36` | Background (via Tailwind's gray-950) |
-| Medium Gray | `#44475a` | Card backgrounds, button backgrounds (via Tailwind's gray-900, gray-800) |
 
 ---
