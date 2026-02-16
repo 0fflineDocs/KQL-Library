@@ -10,7 +10,4 @@ export interface Query {
 export interface CategoryInfo {
   displayName: string;
   textColor: string;
-  buttonBg: string;
-  subCategories: string[];
-  fileName: string;
 }

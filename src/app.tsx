@@ -11,7 +11,6 @@ import QueryDisplay from './components/QueryDisplay';
 import SearchModal from './components/SearchModal';
 
 // Define helper functions for subcategory management
-const createSubcategoryKey = (category: string, subcategory: string) => `${category}:${subcategory}`;
 const parseSubcategoryKey = (key: string | null) => {
   if (!key) return { category: null, subcategory: null };
   const [category, subcategory] = key.split(':');
@@ -63,36 +62,22 @@ const KQLLibrary = () => {
       return indexA - indexB;
     });
     
-    // Create a map to store subcategories for each category
-    const subcategoriesByCategory: Record<string, Set<string>> = {};
-    
-    // Extract subcategories from queries
-    queriesData.forEach(query => {
-      if (!query.category || !query.subCategory) return;
-      
-      if (!subcategoriesByCategory[query.category]) {
-        subcategoriesByCategory[query.category] = new Set<string>();
-      }
-      
-      subcategoriesByCategory[query.category].add(query.subCategory);
-    });
-    
     // Create or update categoryInfo
     const newCategoryInfo: Record<string, CategoryInfo> = {};
     
     // Define color schemes for different categories
-    const colorSchemes: Record<string, { textColor: string, buttonBg: string }> = {
-      "Entra ID": { textColor: "text-blue-400", buttonBg: "bg-slate-800 hover:bg-slate-700" },
-      "Defender for Identity": { textColor: "text-amber-400", buttonBg: "bg-slate-800 hover:bg-slate-700" },
-      "Defender for Endpoint": { textColor: "text-emerald-400", buttonBg: "bg-slate-800 hover:bg-slate-700" },
-      "Defender for Office 365": { textColor: "text-orange-400", buttonBg: "bg-slate-800 hover:bg-slate-700" },
-      "Defender for Cloud Apps": { textColor: "text-purple-400", buttonBg: "bg-slate-800 hover:bg-slate-700" },
-      "Sentinel": { textColor: "text-red-400", buttonBg: "bg-slate-800 hover:bg-slate-700" },
-      "Intune": { textColor: "text-cyan-400", buttonBg: "bg-slate-800 hover:bg-slate-700" }
+    const colorSchemes: Record<string, { textColor: string }> = {
+      "Entra ID": { textColor: "text-blue-400" },
+      "Defender for Identity": { textColor: "text-amber-400" },
+      "Defender for Endpoint": { textColor: "text-emerald-400" },
+      "Defender for Office 365": { textColor: "text-orange-400" },
+      "Defender for Cloud Apps": { textColor: "text-purple-400" },
+      "Sentinel": { textColor: "text-red-400" },
+      "Intune": { textColor: "text-cyan-400" }
     };
     
     // Apply default colors for new/unknown categories
-    const defaultColors = { textColor: "text-slate-300", buttonBg: "bg-slate-800 hover:bg-slate-700" };
+    const defaultColors = { textColor: "text-slate-300" };
     
     // Create category info for each unique category (in sorted order)
     sortedCategories.forEach(category => {
@@ -100,12 +85,7 @@ const KQLLibrary = () => {
       
       newCategoryInfo[category] = {
         displayName: category,
-        textColor: colors.textColor,
-        buttonBg: colors.buttonBg,
-        subCategories: subcategoriesByCategory[category] 
-          ? Array.from(subcategoriesByCategory[category]).sort() 
-          : [],
-        fileName: "" // We no longer need this since we're loading all files dynamically
+        textColor: colors.textColor
       };
     });
     
@@ -371,14 +351,11 @@ const KQLLibrary = () => {
       <SearchModal 
         isOpen={isSearchModalOpen}
         onClose={handleCloseSearch}
-        onSearch={() => {}}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         categories={categories}
         categoryInfo={categoryInfo}
-        selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
-        selectedSubCategory={selectedSubCategory}
         setSelectedSubCategory={handleSetSubCategory}
         queries={queries}
         setSelectedQuery={setSelectedQuery}

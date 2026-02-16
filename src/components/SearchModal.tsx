@@ -3,27 +3,18 @@ import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X } from 'lucide-react';
 import { Query, CategoryInfo } from '@/types';
-import { cn } from '@/lib/utils';
 
 // Utility functions for subcategory key management
 const createSubcategoryKey = (category: string, subcategory: string) => `${category}:${subcategory}`;
-const parseSubcategoryKey = (key: string | null) => {
-  if (!key) return { category: null, subcategory: null };
-  const [category, subcategory] = key.split(':');
-  return { category, subcategory };
-};
 
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSearch: () => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   categories: string[];
   categoryInfo: Record<string, CategoryInfo>;
-  selectedCategory: string | null;
   setSelectedCategory: (category: string | null) => void;
-  selectedSubCategory: string | null;
   setSelectedSubCategory: (subcategory: string | null) => void;
   queries: Query[];
   setSelectedQuery: (query: Query | null) => void;
@@ -32,14 +23,11 @@ interface SearchModalProps {
 const SearchModal = ({ 
   isOpen, 
   onClose, 
-  onSearch, 
   searchTerm, 
   setSearchTerm,
   categories,
   categoryInfo,
-  selectedCategory,
   setSelectedCategory,
-  selectedSubCategory,
   setSelectedSubCategory,
   queries,
   setSelectedQuery
