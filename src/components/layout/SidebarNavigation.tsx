@@ -157,11 +157,13 @@ const SidebarNavigation = ({
             const subcategories = getSubcategoriesFromQueries(category);
             
             return (
-              <div key={category} className="mb-1">
+              <div key={category} className="mb-2">
                 <Button
                   className={cn(
-                    "w-full p-2 rounded-lg flex items-center justify-start transition-colors duration-200",
-                     selectedCategory === category ? "bg-[var(--color-bg-2)]" : "hover:bg-[var(--color-bg-2)]/60"
+                    "w-full py-2.5 px-3 rounded-lg flex items-center justify-start transition-all duration-300 ease-out",
+                    selectedCategory === category
+                      ? "bg-gradient-to-r from-[var(--color-bg-2)] to-[var(--color-bg-2)]/50 shadow-[var(--shadow-btn-selected)] border border-[var(--color-line-subtle)]/70"
+                      : "hover:bg-gradient-to-r hover:from-[var(--color-bg-2)]/70 hover:to-[var(--color-bg-2)]/20 hover:shadow-[var(--shadow-btn-hover)]"
                   )}
                   onClick={() => toggleCategory(category)}
                 >
@@ -184,10 +186,10 @@ const SidebarNavigation = ({
                         <Button
                           key={subcategoryKey}
                           className={cn(
-                            "w-full p-1.5 pl-6 text-sm rounded-lg flex items-center justify-start transition-colors duration-200",
-                            isSelected 
-                              ? "bg-[var(--color-bg-2)] text-[var(--color-fg-0)] font-medium" 
-                              : "text-[var(--color-fg-1)] hover:bg-[var(--color-bg-2)]/60 hover:text-[var(--color-fg-0)]"
+                            "w-full p-2 pl-6 text-sm rounded-lg flex items-center justify-start transition-all duration-300 ease-out mt-1",
+                            isSelected
+                              ? "bg-gradient-to-r from-[var(--color-bg-2)] to-[var(--color-bg-2)]/40 text-[var(--color-fg-0)] font-medium shadow-[var(--shadow-btn-active)]"
+                              : "text-[var(--color-fg-1)] hover:bg-gradient-to-r hover:from-[var(--color-bg-2)]/60 hover:to-[var(--color-bg-2)]/20 hover:text-[var(--color-fg-0)]"
                           )}
                           onClick={() => handleSubcategorySelect(category, subcategory)}
                         >
@@ -221,10 +223,10 @@ const SidebarNavigation = ({
                   <Button
                     key={`${query.category}-${query.title}-${index}`}
                     className={cn(
-                      "w-full p-2 text-sm rounded-lg flex items-center justify-start my-1 transition-colors duration-200",
+                      "w-full p-2 text-sm rounded-lg flex items-center justify-start my-1.5 transition-all duration-300 ease-out",
                       selectedQuery?.title === query.title && selectedQuery?.category === query.category
-                        ? "bg-[var(--color-bg-2)] text-[var(--color-fg-0)]" 
-                        : "text-[var(--color-fg-1)] hover:bg-[var(--color-bg-2)]/60 hover:text-[var(--color-fg-0)]"
+                        ? "bg-gradient-to-r from-[var(--color-bg-2)] to-[var(--color-bg-2)]/40 text-[var(--color-fg-0)] shadow-[var(--shadow-btn-active)]"
+                        : "text-[var(--color-fg-1)] hover:bg-gradient-to-r hover:from-[var(--color-bg-2)]/60 hover:to-[var(--color-bg-2)]/20 hover:text-[var(--color-fg-0)]"
                     )}
                     onClick={() => handleQuerySelect(query)}
                   >
