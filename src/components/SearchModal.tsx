@@ -130,25 +130,25 @@ const SearchModal = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-xl bg-slate-900 border border-slate-700/50 shadow-2xl flex flex-col"
+           className="glass-panel w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-xl bg-[var(--color-bg-1)] border border-[var(--color-border)]/50 shadow-2xl flex flex-col"
         >
           {/* Search input */}
-          <div className="p-4 border-b border-slate-700/30">
+           <div className="p-4 border-b border-[var(--color-border)]/30">
             <div className="flex items-center gap-2">
-              <Search className="w-5 h-5 text-slate-400" />
+               <Search className="w-5 h-5 text-[var(--color-muted)]" />
               <input
                 ref={inputRef}
                 type="text"
                 placeholder="Search queries, tags, descriptions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-200 placeholder-slate-500 text-sm transition-all duration-200 outline-none focus:border-slate-600 focus:ring-1 focus:ring-slate-600/50"
+                 className="w-full px-4 py-2.5 bg-[var(--color-bg-2)]/40 border border-[var(--color-border)]/50 rounded-lg text-[var(--color-fg-1)] placeholder-[var(--color-muted)] text-sm transition-all duration-200 outline-none focus:border-[var(--color-accent)]/60 focus:ring-1 focus:ring-[var(--color-accent)]/30"
               />
               <button 
-                className="p-1 rounded-full hover:bg-slate-800/50 transition-colors duration-200"
+                 className="p-1 rounded-full hover:bg-[var(--color-bg-2)]/60 transition-colors duration-200"
                 onClick={() => setSearchTerm('')}
               >
-                {searchTerm && <X className="w-4 h-4 text-slate-400" />}
+                 {searchTerm && <X className="w-4 h-4 text-[var(--color-muted)]" />}
               </button>
             </div>
           </div>
@@ -159,7 +159,7 @@ const SearchModal = ({
               // Show search results
               filteredQueries.length > 0 ? (
                 <div>
-                  <h3 className="text-slate-400 text-sm mb-2">Search Results ({filteredQueries.length})</h3>
+                   <h3 className="text-[var(--color-muted)] text-sm mb-2">Search Results ({filteredQueries.length})</h3>
                   <div className="space-y-1">
                     {filteredQueries.map((query, index) => (
                       <motion.button
@@ -167,15 +167,15 @@ const SearchModal = ({
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2, delay: index * 0.05 }}
-                        className="w-full text-left p-3 hover:bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-slate-600/50 text-white flex flex-col transition-colors duration-200"
+                         className="w-full text-left p-3 hover:bg-[var(--color-bg-2)]/40 rounded-lg border border-[var(--color-border)]/50 hover:border-[var(--color-accent)]/40 text-white flex flex-col transition-colors duration-200"
                         onClick={() => handleQuerySelect(query)}
                       >
-                        <span className="text-slate-100 font-medium">{query.title}</span>
-                        <span className="text-sm text-slate-300">{query.description}</span>
+                         <span className="text-[var(--color-fg-0)] font-medium">{query.title}</span>
+                         <span className="text-sm text-[var(--color-fg-1)]">{query.description}</span>
                         <div className="flex gap-2 mt-1">
-                          <span className="text-xs text-slate-400">{query.category}</span>
+                           <span className="text-xs text-[var(--color-muted)]">{query.category}</span>
                           {query.subCategory && (
-                            <span className="text-xs text-slate-500">{query.subCategory}</span>
+                             <span className="text-xs text-[var(--color-muted)]/80">{query.subCategory}</span>
                           )}
                         </div>
                       </motion.button>
@@ -183,7 +183,7 @@ const SearchModal = ({
                   </div>
                 </div>
               ) : (
-                <div className="text-center text-slate-400 py-4">
+                 <div className="text-center text-[var(--color-fg-1)] py-4">
                   No queries found matching "{searchTerm}"
                 </div>
               )
@@ -207,7 +207,7 @@ const SearchModal = ({
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="rounded-lg border border-slate-700/50 bg-slate-800/50 p-5 hover:bg-slate-800 hover:border-slate-600/50 transition-colors duration-200"
+                       className="rounded-lg border border-[var(--color-border)]/50 bg-[var(--color-bg-2)]/30 p-5 hover:bg-[var(--color-bg-2)]/60 hover:border-[var(--color-accent)]/40 transition-colors duration-200"
                     >
                       <button
                         className={`text-left font-medium mb-2 ${textColorClass} hover:underline w-full text-sm`}
@@ -217,11 +217,11 @@ const SearchModal = ({
                       </button>
                       
                       {subcategories.length > 0 && (
-                        <div className="ml-2 space-y-1 border-l border-slate-700/30 pl-2">
+                         <div className="ml-2 space-y-1 border-l border-[var(--color-border)]/30 pl-2">
                           {subcategories.map((subCategory) => (
                             <button
                               key={`${category}:${subCategory}`}
-                              className="text-left block text-sm text-slate-300 hover:text-slate-200 hover:bg-slate-800/50 rounded px-2 py-1 w-full transition-colors duration-200"
+                               className="text-left block text-sm text-[var(--color-fg-1)] hover:text-[var(--color-fg-0)] hover:bg-[var(--color-bg-2)]/60 rounded px-2 py-1 w-full transition-colors duration-200"
                               onClick={() => handleSubcategorySelect(category, subCategory)}
                             >
                               {subCategory}
@@ -231,7 +231,7 @@ const SearchModal = ({
                       )}
                       
                       {/* Show count of queries in this category */}
-                      <div className="text-xs text-slate-500 mt-2">
+                       <div className="text-xs text-[var(--color-muted)] mt-2">
                         {queries.filter(q => q.category === category).length} queries
                       </div>
                     </motion.div>
@@ -242,11 +242,11 @@ const SearchModal = ({
           </div>
           
           {/* Footer with cancel button */}
-          <div className="border-t border-slate-700/30 p-3 flex justify-end">
-            <button 
-              className="px-4 py-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-300 hover:text-slate-200 text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-slate-600/50"
-              onClick={onClose}
-            >
+           <div className="border-t border-[var(--color-border)]/30 p-3 flex justify-end">
+             <button 
+               className="btn-secondary px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 focus:outline-none"
+               onClick={onClose}
+             >
               Cancel (ESC)
             </button>
           </div>

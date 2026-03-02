@@ -149,7 +149,7 @@ const SidebarNavigation = ({
   return (
     <div className="flex h-full">
       {/* Left panel: Categories and Subcategories */}
-      <div className="w-64 bg-slate-900 border-r border-slate-800/50 overflow-y-auto h-full">
+      <div className="w-64 bg-[var(--color-bg-0)] border-r border-[var(--color-divider)] overflow-y-auto h-full">
         <div className="p-2">
           {categories.map((category) => {
             const isExpanded = expandedCategories[category];
@@ -161,13 +161,13 @@ const SidebarNavigation = ({
                 <Button
                   className={cn(
                     "w-full p-2 rounded-lg flex items-center justify-start transition-colors duration-200",
-                    selectedCategory === category ? "bg-slate-800" : "hover:bg-slate-800/50"
+                     selectedCategory === category ? "bg-[var(--color-bg-2)]" : "hover:bg-[var(--color-bg-2)]/60"
                   )}
                   onClick={() => toggleCategory(category)}
                 >
                   {isExpanded ? 
-                    <ChevronDown className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" /> : 
-                    <ChevronRight className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" />
+                    <ChevronDown className="w-4 h-4 text-[var(--color-muted)] mr-2 flex-shrink-0" /> : 
+                    <ChevronRight className="w-4 h-4 text-[var(--color-muted)] mr-2 flex-shrink-0" />
                   }
                   <span className={`truncate text-left text-sm font-medium ${textColorClass}`}>
                     {categoryInfo[category]?.displayName || category}
@@ -175,7 +175,7 @@ const SidebarNavigation = ({
                 </Button>
                 
                 {isExpanded && subcategories.length > 0 && (
-                  <div className="ml-2 pl-2 border-l border-slate-700/30 mt-1 mb-2">
+                   <div className="ml-2 pl-2 border-l border-[var(--color-border)]/30 mt-1 mb-2">
                     {subcategories.map((subcategory) => {
                       const subcategoryKey = createSubcategoryKey(category, subcategory);
                       const isSelected = selectedSubCategory === subcategoryKey;
@@ -186,8 +186,8 @@ const SidebarNavigation = ({
                           className={cn(
                             "w-full p-1.5 pl-6 text-sm rounded-lg flex items-center justify-start transition-colors duration-200",
                             isSelected 
-                              ? "bg-slate-800 text-slate-100 font-medium" 
-                              : "text-slate-300 hover:bg-slate-800/50 hover:text-slate-200"
+                              ? "bg-[var(--color-bg-2)] text-[var(--color-fg-0)] font-medium" 
+                              : "text-[var(--color-fg-1)] hover:bg-[var(--color-bg-2)]/60 hover:text-[var(--color-fg-0)]"
                           )}
                           onClick={() => handleSubcategorySelect(category, subcategory)}
                         >
@@ -204,13 +204,13 @@ const SidebarNavigation = ({
       </div>
 
       {/* Right panel: Queries */}
-      <div className="w-72 bg-slate-900/90 overflow-y-auto h-full">
+      <div className="w-72 bg-[var(--color-bg-1)]/85 overflow-y-auto h-full">
         <div className="p-2">
           {selectedCategory ? (
             currentQueries.length > 0 ? (
               <div>
-                <div className="p-2 border-b border-slate-700/30 mb-2">
-                  <h3 className="text-sm font-medium text-slate-400">
+                <div className="p-2 border-b border-[var(--color-border)]/30 mb-2">
+                  <h3 className="text-sm font-medium text-[var(--color-muted)]">
                     {selectedSubCategory 
                       ? `${selectedCategory} / ${parseSubcategoryKey(selectedSubCategory).subcategory}` 
                       : selectedCategory}
@@ -223,8 +223,8 @@ const SidebarNavigation = ({
                     className={cn(
                       "w-full p-2 text-sm rounded-lg flex items-center justify-start my-1 transition-colors duration-200",
                       selectedQuery?.title === query.title && selectedQuery?.category === query.category
-                        ? "bg-slate-800 text-slate-100" 
-                        : "text-slate-300 hover:bg-slate-800/50 hover:text-slate-200"
+                        ? "bg-[var(--color-bg-2)] text-[var(--color-fg-0)]" 
+                        : "text-[var(--color-fg-1)] hover:bg-[var(--color-bg-2)]/60 hover:text-[var(--color-fg-0)]"
                     )}
                     onClick={() => handleQuerySelect(query)}
                   >

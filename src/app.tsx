@@ -308,7 +308,7 @@ const KQLLibrary = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-900 text-slate-100 overflow-hidden">
+    <div className="dashboard-shell flex flex-col h-screen bg-[var(--color-bg-0)] text-[var(--color-fg-0)] overflow-hidden">
       {/* Header */}
       <Header onOpenSearch={() => setIsSearchModalOpen(true)} />
 
@@ -328,17 +328,17 @@ const KQLLibrary = () => {
         />
 
         {/* Main content area */}
-        <div className="flex-1 overflow-hidden bg-slate-900">
+        <div className="flex-1 overflow-hidden bg-[var(--color-bg-0)]">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="text-slate-400 mb-4">Loading queries...</div>
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-400"></div>
+              <div className="text-[var(--color-fg-1)] mb-4">Loading queries...</div>
+              <div className="spinner"></div>
             </div>
           ) : loadingError ? (
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="text-red-400 mb-4">{loadingError}</div>
+              <div className="text-[var(--color-bad)] mb-4">{loadingError}</div>
               <button
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg transition-colors duration-200"
+                className="btn-secondary px-4 py-2 rounded-lg transition-colors duration-200"
                 onClick={handleForceReload}
               >
                 Try Again
