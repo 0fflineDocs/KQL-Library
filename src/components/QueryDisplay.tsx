@@ -10,7 +10,7 @@ interface QueryDisplayProps {
 const QueryDisplay = ({ query }: QueryDisplayProps) => {
   if (!query) {
     return (
-      <div className="flex items-center justify-center h-full text-slate-400">
+      <div className="flex items-center justify-center h-full text-[var(--color-fg-1)]">
         Select a query from the sidebar to view details
       </div>
     );
@@ -35,15 +35,15 @@ const QueryDisplay = ({ query }: QueryDisplayProps) => {
     >
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-slate-50 mb-2">{query.title}</h2>
-          <p className="text-slate-300 mb-4">{query.description}</p>
+          <h2 className="text-xl font-semibold text-[var(--color-fg-0)] mb-2">{query.title}</h2>
+          <p className="text-[var(--color-fg-1)] mb-4">{query.description}</p>
           
           {query.tags && query.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {query.tags.map((tag, index) => (
                 <span 
                   key={index} 
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800/50 text-slate-300"
+                   className="badge-glow inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
                 >
                   {tag}
                 </span>
@@ -53,25 +53,25 @@ const QueryDisplay = ({ query }: QueryDisplayProps) => {
           
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-400">Category:</span>
-              <span className="text-sm text-slate-200">{query.category}</span>
+               <span className="text-sm text-[var(--color-muted)]">Category:</span>
+               <span className="text-sm text-[var(--color-fg-1)]">{query.category}</span>
             </div>
             {query.subCategory && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-400">Subcategory:</span>
-                <span className="text-sm text-slate-200">{query.subCategory}</span>
+                 <span className="text-sm text-[var(--color-muted)]">Subcategory:</span>
+                 <span className="text-sm text-[var(--color-fg-1)]">{query.subCategory}</span>
               </div>
             )}
           </div>
         </div>
         
-        <div className="rounded-lg border border-slate-700/50 bg-slate-800/50 overflow-hidden">
-          <div className="bg-slate-800 py-3 px-4 flex justify-between items-center border-b border-slate-700/30">
-            <h3 className="text-sm font-semibold text-slate-100">KQL Query</h3>
+         <div className="rounded-lg border border-[var(--color-border)]/50 bg-[var(--color-bg-1)]/70 overflow-hidden shadow-[var(--shadow-hard)]">
+           <div className="bg-[var(--color-bg-1)] py-3 px-4 flex justify-between items-center border-b border-[var(--color-border)]/30">
+             <h3 className="text-sm font-semibold text-[var(--color-fg-0)]">KQL Query</h3>
             <CopyButton text={query.query} />
           </div>
           <div className={`w-full overflow-auto ${getCardContentHeight(query.query)}`}>
-            <pre className="p-4 text-sm text-slate-200 font-mono whitespace-pre-wrap break-words h-full">
+             <pre className="p-4 text-sm text-[var(--color-fg-1)] font-mono whitespace-pre-wrap break-words h-full bg-[var(--color-terminal)]">
               <code>{query.query}</code>
             </pre>
           </div>
