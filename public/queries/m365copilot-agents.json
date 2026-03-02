@@ -1,0 +1,99 @@
+[
+  {
+    "title": "Copilot Prompt Activity by User",
+    "description": "Summarizes Copilot-related activities by user to establish a usage baseline and detect spikes.",
+    "query": "OfficeActivity\n| where TimeGenerated > ago(30d)\n| where OfficeWorkload has \"Copilot\" or Operation has \"Copilot\"\n| summarize Activities=count(), FirstSeen=min(TimeGenerated), LastSeen=max(TimeGenerated) by UserId, OfficeWorkload, Operation\n| order by Activities desc",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "Usage & Baseline",
+    "tags": [
+      "copilot",
+      "agent",
+      "baseline"
+    ]
+  },
+  {
+    "title": "Copilot Activity Outside Business Hours",
+    "description": "Finds Copilot-related activity outside normal business hours (06:00-20:00) for anomaly hunting.",
+    "query": "OfficeActivity\n| where TimeGenerated > ago(14d)\n| where OfficeWorkload has \"Copilot\" or Operation has \"Copilot\"\n| extend Hour=hourofday(TimeGenerated)\n| where Hour < 6 or Hour > 20\n| summarize Events=count() by UserId, Operation, bin(TimeGenerated, 1h)\n| order by Events desc",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "Security Monitoring",
+    "tags": [
+      "copilot",
+      "anomaly",
+      "after-hours"
+    ]
+  },
+  {
+    "title": "Sensitive File Access Preceding Copilot Activity",
+    "description": "Correlates recent sensitive SharePoint/OneDrive file access with Copilot activity from the same user.",
+    "query": "let SensitiveAccess = OfficeActivity\n| where TimeGenerated > ago(7d)\n| where OfficeWorkload in (\"SharePoint\", \"OneDrive\")\n| where Operation in (\"FileAccessed\", \"FileDownloaded\")\n| where SourceFileName has_any (\"payroll\", \"invoice\", \"contract\", \"confidential\", \"hr\", \"finance\")\n| project AccessTime=TimeGenerated, UserId, SourceFileName, SourceRelativeUrl;\nlet CopilotEvents = OfficeActivity\n| where TimeGenerated > ago(7d)\n| where OfficeWorkload has \"Copilot\" or Operation has \"Copilot\"\n| project CopilotTime=TimeGenerated, UserId, Operation;\nCopilotEvents\n| join kind=inner SensitiveAccess on UserId\n| where AccessTime between (CopilotTime - 30m .. CopilotTime + 30m)\n| project CopilotTime, AccessTime, UserId, Operation, SourceFileName, SourceRelativeUrl\n| order by CopilotTime desc",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "Data Protection",
+    "tags": [
+      "copilot",
+      "sensitive data",
+      "sharepoint",
+      "onedrive"
+    ]
+  },
+  {
+    "title": "Copilot and Risky Sign-in Correlation",
+    "description": "Correlates Copilot-related activities with risky sign-ins to prioritize suspicious sessions.",
+    "query": "let RiskySignins = SigninLogs\n| where TimeGenerated > ago(7d)\n| where RiskLevelDuringSignIn !in (\"none\", \"hidden\") or RiskState !in (\"none\", \"remediated\")\n| project SigninTime=TimeGenerated, UserPrincipalName, IPAddress, RiskLevelDuringSignIn, RiskState;\nlet CopilotEvents = OfficeActivity\n| where TimeGenerated > ago(7d)\n| where OfficeWorkload has \"Copilot\" or Operation has \"Copilot\"\n| project CopilotTime=TimeGenerated, UserPrincipalName=UserId, OfficeWorkload, Operation;\nCopilotEvents\n| join kind=inner RiskySignins on UserPrincipalName\n| where CopilotTime between (SigninTime .. SigninTime + 2h)\n| project CopilotTime, SigninTime, UserPrincipalName, IPAddress, RiskLevelDuringSignIn, RiskState, OfficeWorkload, Operation\n| order by CopilotTime desc",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "Security Monitoring",
+    "tags": [
+      "copilot",
+      "risky sign-in",
+      "identity"
+    ]
+  },
+  {
+    "title": "Potential Prompt Exfiltration Keywords",
+    "description": "Hunts for Copilot-related events where operation details include possible data exfiltration intent keywords.",
+    "query": "OfficeActivity\n| where TimeGenerated > ago(14d)\n| where OfficeWorkload has \"Copilot\" or Operation has \"Copilot\"\n| extend Context=tostring(parse_json(tostring(Parameters))[0].Value)\n| where Context has_any (\"export\", \"download\", \"full list\", \"all records\", \"customer data\", \"salary\", \"social security\", \"pii\")\n| project TimeGenerated, UserId, Operation, OfficeWorkload, ClientIP, Context\n| order by TimeGenerated desc",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "Data Protection",
+    "tags": [
+      "copilot",
+      "exfiltration",
+      "pii"
+    ]
+  },
+  {
+    "title": "Copilot Plugin or Connector Admin Changes",
+    "description": "Tracks admin operations related to Copilot plugins/connectors and agent configuration changes.",
+    "query": "AuditLogs\n| where TimeGenerated > ago(30d)\n| where OperationName has_any (\"Copilot\", \"Plugin\", \"Connector\", \"Agent\")\n| project TimeGenerated, OperationName, InitiatedBy=tostring(InitiatedBy.user.userPrincipalName), TargetResources, Result\n| order by TimeGenerated desc",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "Governance",
+    "tags": [
+      "copilot",
+      "governance",
+      "admin changes"
+    ]
+  },
+  {
+    "title": "Users with New Copilot Usage in Last 7 Days",
+    "description": "Identifies users who started Copilot usage recently for onboarding and risk review.",
+    "query": "let HistoricUsers = OfficeActivity\n| where TimeGenerated between (ago(60d) .. ago(7d))\n| where OfficeWorkload has \"Copilot\" or Operation has \"Copilot\"\n| distinct UserId;\nOfficeActivity\n| where TimeGenerated > ago(7d)\n| where OfficeWorkload has \"Copilot\" or Operation has \"Copilot\"\n| summarize RecentEvents=count(), FirstSeen=min(TimeGenerated) by UserId\n| where UserId !in (HistoricUsers)\n| order by RecentEvents desc",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "Usage & Baseline",
+    "tags": [
+      "copilot",
+      "new users",
+      "adoption"
+    ]
+  },
+  {
+    "title": "Copilot Activity by Client IP",
+    "description": "Provides IP visibility for Copilot-related activity to detect unusual source addresses.",
+    "query": "OfficeActivity\n| where TimeGenerated > ago(30d)\n| where OfficeWorkload has \"Copilot\" or Operation has \"Copilot\"\n| summarize Events=count(), Users=dcount(UserId) by ClientIP\n| order by Events desc",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "Security Monitoring",
+    "tags": [
+      "copilot",
+      "geo",
+      "ip"
+    ]
+  }
+]

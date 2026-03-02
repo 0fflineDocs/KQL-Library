@@ -25,6 +25,7 @@ const KQLLibrary = () => {
     "Defender for Endpoint",
     "Defender for Office 365",
     "Defender for Cloud Apps",
+    "M365 Copilot / Agents",
     "Sentinel",
     "Intune"
   ];
@@ -72,6 +73,7 @@ const KQLLibrary = () => {
       "Defender for Endpoint": { textColor: "text-emerald-400" },
       "Defender for Office 365": { textColor: "text-orange-400" },
       "Defender for Cloud Apps": { textColor: "text-purple-400" },
+      "M365 Copilot / Agents": { textColor: "text-fuchsia-400" },
       "Sentinel": { textColor: "text-red-400" },
       "Intune": { textColor: "text-cyan-400" }
     };
@@ -113,6 +115,7 @@ const KQLLibrary = () => {
         'mde-endpoint.json',
         'mde-governance.json',
         'mde-smartscreen.json',
+        'm365copilot-agents.json',
         'sentinel.json'
       ];
       
