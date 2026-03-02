@@ -149,7 +149,7 @@ const SidebarNavigation = ({
   return (
     <div className="flex h-full">
       {/* Left panel: Categories and Subcategories */}
-      <div className="w-64 bg-[var(--color-bg-0)] border-r border-[var(--color-divider)] overflow-y-auto h-full">
+      <div className="w-64 bg-[var(--color-bg-0)] border-r border-[var(--color-line-subtle)] overflow-y-auto h-full">
         <div className="p-2">
           {categories.map((category) => {
             const isExpanded = expandedCategories[category];
@@ -175,7 +175,7 @@ const SidebarNavigation = ({
                 </Button>
                 
                 {isExpanded && subcategories.length > 0 && (
-                   <div className="ml-2 pl-2 border-l border-[var(--color-border)]/30 mt-1 mb-2">
+                   <div className="ml-2 pl-2 border-l border-[var(--color-line-subtle)] mt-1 mb-2">
                     {subcategories.map((subcategory) => {
                       const subcategoryKey = createSubcategoryKey(category, subcategory);
                       const isSelected = selectedSubCategory === subcategoryKey;
@@ -209,7 +209,7 @@ const SidebarNavigation = ({
           {selectedCategory ? (
             currentQueries.length > 0 ? (
               <div>
-                <div className="p-2 border-b border-[var(--color-border)]/30 mb-2">
+                <div className="p-2 border-b border-[var(--color-line-subtle)] mb-2">
                   <h3 className="text-sm font-medium text-[var(--color-muted)]">
                     {selectedSubCategory 
                       ? `${selectedCategory} / ${parseSubcategoryKey(selectedSubCategory).subcategory}` 

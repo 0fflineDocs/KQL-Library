@@ -65,8 +65,8 @@ const QueryDisplay = ({ query }: QueryDisplayProps) => {
           </div>
         </div>
         
-         <div className="rounded-lg border border-[var(--color-border)]/50 bg-[var(--color-bg-1)]/70 overflow-hidden shadow-[var(--shadow-hard)]">
-           <div className="bg-[var(--color-bg-1)] py-3 px-4 flex justify-between items-center border-b border-[var(--color-border)]/30">
+         <div className="rounded-lg border border-[var(--color-line-subtle)] bg-[var(--color-bg-1)]/70 overflow-hidden shadow-[var(--shadow-hard)]">
+           <div className="bg-[var(--color-bg-1)] py-3 px-4 flex justify-between items-center border-b border-[var(--color-line-subtle)]">
              <h3 className="text-sm font-semibold text-[var(--color-fg-0)]">KQL Query</h3>
             <CopyButton text={query.query} />
           </div>
