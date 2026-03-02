@@ -71,7 +71,7 @@ const QueryDisplay = ({ query }: QueryDisplayProps) => {
             <CopyButton text={query.query} />
           </div>
           <div className={`w-full overflow-auto ${getCardContentHeight(query.query)}`}>
-             <pre className="p-4 text-sm text-[var(--color-fg-1)] font-mono whitespace-pre-wrap break-words h-full bg-[#050507]">
+             <pre className="p-4 text-sm text-[var(--color-fg-1)] font-mono whitespace-pre-wrap break-words h-full bg-[var(--color-terminal)]">
               <code>{query.query}</code>
             </pre>
           </div>

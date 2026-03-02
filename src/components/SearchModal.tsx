@@ -244,7 +244,7 @@ const SearchModal = ({
           {/* Footer with cancel button */}
            <div className="border-t border-[var(--color-border)]/30 p-3 flex justify-end">
              <button 
-               className="btn-secondary px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 focus:outline-none"
+               className="btn-secondary px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]/70 focus:ring-offset-2 focus:ring-offset-[var(--color-bg-1)]"
                onClick={onClose}
              >
               Cancel (ESC)
