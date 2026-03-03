@@ -1,5 +1,6 @@
 // src/app.tsx - Fully updated with dynamic category and file loading
 import React, { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 
 // Import types
 import { Query, CategoryInfo } from './types';
@@ -366,6 +367,9 @@ const KQLLibrary = () => {
       
       {/* Debug info */}
       {renderDebugInfo()}
+      
+      {/* Vercel Analytics */}
+      <Analytics />
     </div>
   );
 };
