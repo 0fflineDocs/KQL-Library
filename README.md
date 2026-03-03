@@ -5,13 +5,13 @@ Featuring category-based organization and instant search capabilities.
 
 Built with **React, TypeScript**, and **Tailwind CSS**.
 
-<img width="1964" height="848" alt="image" src="https://github.com/user-attachments/assets/42d7a311-4c6c-4303-bdc8-4d7749c84a36" />
+---
 
 ## Features
-🗂️  Organize queries by category and subcategory.\
-🔍  Search functionality across titles, descriptions, and tags.\
-📋  One-click copy button for quick query access.\
-📱  Responsive design for all devices.
+Organize queries by category and subcategory.\
+Search functionality across titles, descriptions, and tags.\
+One-click copy button for quick query access.\
+Responsive design for all devices.
 
 ## Tech Stack
 
