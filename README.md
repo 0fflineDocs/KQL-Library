@@ -1,12 +1,10 @@
-<p>
+<p align="center">
   <br>
   <strong>K &nbsp; Q &nbsp; L &nbsp; &nbsp; L &nbsp; I &nbsp; B &nbsp; R &nbsp; A &nbsp; R &nbsp; Y</strong>
   <br>
-  <br>
-  <br>
 </p>
 
-<p>
+<p align="center">
   <img src="https://img.shields.io/badge/React-19.2.4-61DAFB?style=flat-square&amp;logo=react&amp;logoColor=white">
   <img src="https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=flat-square&amp;logo=typescript&amp;logoColor=white">
   <img src="https://img.shields.io/badge/Vite-7.3.1-646CFF?style=flat-square&amp;logo=vite&amp;logoColor=white">
