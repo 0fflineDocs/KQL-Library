@@ -1,11 +1,21 @@
-# KQL Library 
+<p>
+  <br>
+  <strong>K &nbsp; Q &nbsp; L &nbsp; &nbsp; L &nbsp; I &nbsp; B &nbsp; R &nbsp; A &nbsp; R &nbsp; Y</strong>
+  <br>
+  <br>
+  <br>
+</p>
 
-KQL Library provides a clean, intuitive interface for security professionals to search and copy kusto queries.\
-Featuring category-based organization and instant search capabilities.
-
-Built with **React, TypeScript**, and **Tailwind CSS**.
+<p>
+  <img src="https://img.shields.io/badge/React-19.2.4-61DAFB?style=flat-square&amp;logo=react&amp;logoColor=white">
+  <img src="https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=flat-square&amp;logo=typescript&amp;logoColor=white">
+  <img src="https://img.shields.io/badge/Vite-7.3.1-646CFF?style=flat-square&amp;logo=vite&amp;logoColor=white">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3.3+-06B6D4?style=flat-square&amp;logo=tailwindcss&amp;logoColor=white">
+</p>
 
 ---
+
+**KQL Library** is a security-focused query hub for exploring and copying Kusto queries. It organizes queries by Microsoft security product categories and subcategories, with fast search and one-click copy support for efficient investigation and detection workflows.
 
 ## Features
 Organize queries by category and subcategory.\
