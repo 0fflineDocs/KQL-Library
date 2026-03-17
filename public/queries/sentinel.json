@@ -12,6 +12,32 @@
     ]
   },
   {
+    "title": "SharePoint Member Sharing Links",
+    "description": "Shows SharePoint member-to-member sharing activity and organization-wide links, including when the share was created and which file was involved",
+    "query": "let timeframe = 30d;\nOfficeActivity\n| where TimeGenerated > ago(timeframe)\n| where OfficeWorkload == \"SharePoint\"\n| where Operation in (\"CompanyLinkCreated\", \"SharingSet\")\n| extend SharedWith = coalesce(TargetUserOrGroupName, UserSharedWith)\n| where Operation == \"CompanyLinkCreated\" or TargetUserOrGroupType == \"Member\"\n| extend LinkType = case(\n    Operation == \"CompanyLinkCreated\", \"Organization-wide link\",\n    Operation == \"SharingSet\", \"Direct share to member\",\n    Operation\n)\n| extend ShareKey = coalesce(UniqueSharingId, strcat(Operation, \"|\", UserId, \"|\", Site_Url, \"|\", SourceRelativeUrl, \"|\", SourceFileName))\n| summarize\n    FirstSeen=min(TimeGenerated),\n    LastSeen=max(TimeGenerated),\n    SharedWith=make_set_if(SharedWith, isnotempty(SharedWith), 50),\n    Operations=make_set(Operation, 10),\n    SharingTypes=make_set_if(SharingType, isnotempty(SharingType), 10),\n    ClientIPs=make_set_if(ClientIP, isnotempty(ClientIP), 20)\n    by ShareKey, LinkType, UserId, SourceFileName, SourceRelativeUrl, Site_Url\n| project FirstSeen, LastSeen, UserId, LinkType, SourceFileName, SourceRelativeUrl, Site_Url, SharedWith, SharingTypes, Operations, ClientIPs\n| order by LastSeen desc",
+    "category": "Sentinel",
+    "subCategory": "SharePoint Sharing",
+    "tags": [
+      "SharePoint",
+      "OfficeActivity",
+      "member sharing",
+      "links"
+    ]
+  },
+  {
+    "title": "SharePoint Guest Sharing Links",
+    "description": "Shows SharePoint guest sharing links and invitations, including when they were created, which file was shared, and who the target guest was",
+    "query": "let timeframe = 30d;\nOfficeActivity\n| where TimeGenerated > ago(timeframe)\n| where OfficeWorkload == \"SharePoint\"\n| where Operation in (\"AnonymousLinkCreated\", \"SecureLinkCreated\", \"AddedToSecureLink\", \"SharingInvitationCreated\", \"SharingInvitationAccepted\")\n| extend SharedWith = coalesce(TargetUserOrGroupName, UserSharedWith)\n| where Operation in (\"AnonymousLinkCreated\", \"SecureLinkCreated\")\n    or TargetUserOrGroupType == \"Guest\"\n    or SharedWith contains \"#EXT#\"\n| extend LinkType = case(\n    Operation == \"AnonymousLinkCreated\", \"Anyone link\",\n    Operation == \"SecureLinkCreated\", \"Specific people link\",\n    Operation == \"AddedToSecureLink\", \"Guest added to specific people link\",\n    Operation == \"SharingInvitationCreated\", \"Guest invitation created\",\n    Operation == \"SharingInvitationAccepted\", \"Guest invitation accepted\",\n    Operation\n)\n| extend ShareKey = coalesce(UniqueSharingId, strcat(Operation, \"|\", UserId, \"|\", Site_Url, \"|\", SourceRelativeUrl, \"|\", SourceFileName))\n| summarize\n    FirstSeen=min(TimeGenerated),\n    LastSeen=max(TimeGenerated),\n    SharedWith=make_set_if(SharedWith, isnotempty(SharedWith), 50),\n    TargetTypes=make_set_if(TargetUserOrGroupType, isnotempty(TargetUserOrGroupType), 10),\n    SharingTypes=make_set_if(SharingType, isnotempty(SharingType), 10),\n    Operations=make_set(Operation, 10),\n    ClientIPs=make_set_if(ClientIP, isnotempty(ClientIP), 20)\n    by ShareKey, LinkType, UserId, SourceFileName, SourceRelativeUrl, Site_Url\n| project FirstSeen, LastSeen, UserId, LinkType, SourceFileName, SourceRelativeUrl, Site_Url, SharedWith, TargetTypes, SharingTypes, Operations, ClientIPs\n| order by LastSeen desc",
+    "category": "Sentinel",
+    "subCategory": "SharePoint Sharing",
+    "tags": [
+      "SharePoint",
+      "OfficeActivity",
+      "guest sharing",
+      "external sharing"
+    ]
+  },
+  {
     "title": "Active Risky Users with Risky Sign-ins",
     "description": "Identifies users marked as risky who have recent risky sign-ins that haven't been remediated",
     "query": "let a=(\nAADRiskyUsers\n| where RiskLevel in ('medium','high') and RiskDetail !in('adminConfirmedUserCompromised','adminConfirmedSigninCompromised') \n| distinct tolower(UserPrincipalName));\nSigninLogs\n| where tolower(UserPrincipalName) in (a)\n| where RiskLevelDuringSignIn != 'none' and RiskState != 'remediated'\n| project TimeGenerated, Identity, Location, LocationDetails,AuthenticationRequirement, ClientAppUsed, RiskState, RiskDetail, RiskEventTypes",
