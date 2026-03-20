@@ -95,5 +95,113 @@
       "geo",
       "ip"
     ]
+  },
+  {
+    "title": "AI Agents Created by External Users",
+    "description": "Finds AI agents whose creator UPN is outside your tenant domain. Replace `yourorgdomain.com` before running.",
+    "query": "AIAgentsInfo\n| summarize arg_max(Timestamp, *) by AIAgentId\n| where AgentStatus != \"Deleted\"\n| where CreatorAccountUpn !endswith \"@yourorgdomain.com\"\n| project-reorder AgentCreationTime, AIAgentId, AIAgentName, AgentStatus, CreatorAccountUpn, OwnerAccountUpns, EnvironmentId",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "AI Agents",
+    "tags": [
+      "copilot",
+      "agent",
+      "AIAgents",
+      "external"
+    ]
+  },
+  {
+    "title": "AI Agents Not Published Within X Days",
+    "description": "Highlights AI agents that have not been published recently. Adjust `Lookback` to your required threshold.",
+    "query": "let Lookback = 30d;\nAIAgentsInfo\n| summarize arg_max(Timestamp, *) by AIAgentId\n| where AgentStatus != \"Deleted\"\n| where isnull(LastPublishedTime) or LastPublishedTime < ago(Lookback)\n| project-reorder AgentCreationTime, LastPublishedTime, AIAgentId, AIAgentName, AgentStatus, CreatorAccountUpn, OwnerAccountUpns, EnvironmentId\n| order by LastPublishedTime asc nulls first",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "AI Agents",
+    "tags": [
+      "copilot",
+      "agent",
+      "AIAgents",
+      "stale"
+    ]
+  },
+  {
+    "title": "AI Agents With No Authentication",
+    "description": "Identifies AI agents that do not require user authentication and may be exposed more broadly than intended.",
+    "query": "AIAgentsInfo\n| summarize arg_max(Timestamp, *) by AIAgentId\n| where AgentStatus != \"Deleted\"\n| where UserAuthenticationType == \"None\"\n| project-reorder AgentCreationTime, AIAgentId, AIAgentName, AgentStatus, CreatorAccountUpn, OwnerAccountUpns",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "AI Agents",
+    "tags": [
+      "copilot",
+      "agent",
+      "AIAgents",
+      "authentication"
+    ]
+  },
+  {
+    "title": "AI Agents With HTTP Requests to Nonstandard Ports",
+    "description": "Finds AI agents whose HTTP request actions call explicit ports other than 80 or 443.",
+    "query": "AIAgentsInfo\n| summarize arg_max(Timestamp, *) by AIAgentId\n| where AgentStatus != \"Deleted\"\n| mvexpand Topic = AgentTopicsDetails\n| where Topic has \"HttpRequestAction\"\n| extend TopicActions = Topic.beginDialog.actions\n| mvexpand action = TopicActions\n| where action['$kind'] == \"HttpRequestAction\"\n| extend Url = tostring(action.url.literalValue)\n| extend ParsedUrl = parse_url(Url)\n| extend Port = tostring(ParsedUrl[\"Port\"])\n| where isnotempty(Port) and Port !in (\"80\", \"443\")\n| project-reorder AgentCreationTime, AIAgentId, AIAgentName, ParsedUrl, Url, Port, AgentStatus, CreatorAccountUpn, OwnerAccountUpns, Topic",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "AI Agents",
+    "tags": [
+      "copilot",
+      "agent",
+      "AIAgents",
+      "http",
+      "network"
+    ]
+  },
+  {
+    "title": "AI Agents With HTTP Requests to Connector Endpoints",
+    "description": "Finds AI agents using raw HTTP actions against endpoints that typically have a built-in Power Platform connector.",
+    "query": "AIAgentsInfo\n| summarize arg_max(Timestamp, *) by AIAgentId\n| where AgentStatus != \"Deleted\"\n| mvexpand Topic = AgentTopicsDetails\n| where Topic has \"HttpRequestAction\"\n| extend TopicActions = Topic.beginDialog.actions\n| mvexpand action = TopicActions\n| where action['$kind'] == \"HttpRequestAction\"\n| extend Url = tostring(action.url.literalValue)\n| extend ParsedUrl = parse_url(Url)\n| extend Host = tostring(ParsedUrl[\"Host\"])\n| where Host has_any (\"graph.microsoft.com\", \"management.azure.com\")\n| project-reorder AgentCreationTime, AIAgentId, AIAgentName, ParsedUrl, Url, Host, AgentStatus, CreatorAccountUpn, OwnerAccountUpns, Topic",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "AI Agents",
+    "tags": [
+      "copilot",
+      "agent",
+      "AIAgents",
+      "connector",
+      "http"
+    ]
+  },
+  {
+    "title": "AI Agents Sending Email to AI-Controlled Inputs",
+    "description": "Identifies generative-orchestration agents that can invoke Outlook email actions with inputs supplied entirely by the orchestrator.",
+    "query": "AIAgentsInfo\n| summarize arg_max(Timestamp, *) by AIAgentId\n| where AgentStatus != \"Deleted\"\n| extend IsGenAIOrchestrator = tostring(todynamic(RawAgentInfo).Bot.Attributes.configuration) has '\"GenerativeActionsEnabled\": true'\n| where IsGenAIOrchestrator\n| mvexpand Action = AgentToolsDetails\n| extend OperationId = tostring(Action.action.operationId), ActionName = tostring(Action.modelDisplayName)\n| where OperationId == \"SendEmailV2\"\n| where isempty(Action.inputs)\n| project-reorder AgentCreationTime, AIAgentId, AIAgentName, AgentStatus, CreatorAccountUpn, OwnerAccountUpns, ActionName",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "AI Agents",
+    "tags": [
+      "copilot",
+      "agent",
+      "AIAgents",
+      "email",
+      "exfiltration"
+    ]
+  },
+  {
+    "title": "AI Agents With Hard-Coded Credentials",
+    "description": "Detects possible clear-text secrets embedded in AI agent topics or tool definitions.",
+    "query": "let suspicious_patterns = @\"(AKIA[0-9A-Z]{16})|(AIza[0-9A-Za-z_\\-]{35})|(xox[baprs]-[0-9a-zA-Z]{10,48})|(ghp_[A-Za-z0-9]{36,59})|(sk_(live|test)_[A-Za-z0-9]{24})|(SG\\.[A-Za-z0-9]{22}\\.[A-Za-z0-9]{43})|(\\d{8}:[\\w\\-]{35})|(eyJ[A-Za-z0-9_\\-]+\\.[A-Za-z0-9_\\-]+\\.[A-Za-z0-9_\\-]+)|(Authorization\\s*:\\s*Basic\\s+[A-Za-z0-9=:+]+)|([A-Za-z]+:\\/\\/[^\\/\\s]+:[^\\/\\s]+@[^\\/\\s]+)\";\nAIAgentsInfo\n| summarize arg_max(Timestamp, *) by AIAgentId\n| where AgentStatus != \"Deleted\"\n| mv-expand tool = AgentToolsDetails\n| mv-expand topic = AgentTopicsDetails\n| where isnotempty(tool) and isnotempty(topic)\n| where tool matches regex suspicious_patterns or topic matches regex suspicious_patterns\n| extend SuspiciousMatchTool = tool, SuspiciousMatchTopic = topic\n| project-reorder AgentCreationTime, AIAgentId, AIAgentName, AgentStatus, CreatorAccountUpn, OwnerAccountUpns, SuspiciousMatchTool, SuspiciousMatchTopic",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "AI Agents",
+    "tags": [
+      "copilot",
+      "agent",
+      "AIAgents",
+      "credentials",
+      "secrets"
+    ]
+  },
+  {
+    "title": "AI Agents With Configured MCP Tools",
+    "description": "Lists AI agents that have Model Context Protocol tools configured.",
+    "query": "AIAgentsInfo\n| summarize arg_max(Timestamp, *) by AIAgentId\n| where AgentStatus != \"Deleted\"\n| mvexpand Action = AgentToolsDetails\n| where Action.action.operationDetails['$kind'] == \"ModelContextProtocolMetadata\"\n| extend MCPName = Action.action.operationDetails[\"operationId\"]\n| summarize MCPTools = make_set(MCPName) by AIAgentName, AIAgentId, EnvironmentId, CreatorAccountUpn",
+    "category": "M365 Copilot / Agents",
+    "subCategory": "AI Agents",
+    "tags": [
+      "copilot",
+      "agent",
+      "AIAgents",
+      "mcp"
+    ]
   }
 ]
