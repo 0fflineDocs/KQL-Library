@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import CopyButton from '@/components/ui/CopyButton';
+import KqlCodeBlock from '@/components/ui/KqlCodeBlock';
 import { Query } from '@/types';
 
 interface QueryDisplayProps {
@@ -41,9 +42,9 @@ const QueryDisplay = ({ query }: QueryDisplayProps) => {
           {query.tags && query.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {query.tags.map((tag, index) => (
-                <span 
-                  key={index} 
-                   className="badge-glow inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/8 text-[var(--color-accent)]"
                 >
                   {tag}
                 </span>
@@ -51,29 +52,23 @@ const QueryDisplay = ({ query }: QueryDisplayProps) => {
             </div>
           )}
           
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center gap-2">
-               <span className="text-sm text-[var(--color-muted)]">Category:</span>
-               <span className="text-sm text-[var(--color-fg-1)]">{query.category}</span>
-            </div>
-            {query.subCategory && (
-              <div className="flex items-center gap-2">
-                 <span className="text-sm text-[var(--color-muted)]">Subcategory:</span>
-                 <span className="text-sm text-[var(--color-fg-1)]">{query.subCategory}</span>
-              </div>
-            )}
+          <div className="mb-2">
+            <span className="text-xs text-[var(--color-muted)]">
+              {query.category}
+              {query.subCategory && (
+                <> <span className="opacity-40">/</span> {query.subCategory}</>
+              )}
+            </span>
           </div>
         </div>
         
          <div className="rounded-lg border border-[var(--color-line-subtle)] bg-[var(--color-bg-1)]/70 overflow-hidden shadow-[var(--shadow-hard)]">
-           <div className="bg-[var(--color-bg-1)] py-3 px-4 flex justify-between items-center border-b border-[var(--color-line-subtle)]">
+           <div className="bg-[var(--color-bg-1)] py-3 px-4 flex justify-between items-center border-b border-[var(--color-line-subtle)] border-t-2 border-t-[var(--color-accent)]/40">
              <h3 className="text-sm font-semibold text-[var(--color-fg-0)]">KQL Query</h3>
             <CopyButton text={query.query} />
           </div>
           <div className={`w-full overflow-auto ${getCardContentHeight(query.query)}`}>
-             <pre className="p-4 text-sm text-[var(--color-fg-1)] font-mono whitespace-pre-wrap break-words h-full bg-[var(--color-terminal)]">
-              <code>{query.query}</code>
-            </pre>
+            <KqlCodeBlock code={query.query} />
           </div>
         </div>
       </div>
