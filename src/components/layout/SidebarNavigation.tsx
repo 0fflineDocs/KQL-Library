@@ -150,11 +150,6 @@ const SidebarNavigation = ({
     <div className="flex h-full">
       {/* Left panel: Categories and Subcategories */}
       <div className="w-64 bg-[var(--color-bg-0)] border-r border-[var(--color-line-subtle)] overflow-y-auto h-full">
-        <div className="sticky top-0 z-10 px-4 py-4 bg-[var(--color-bg-0)]/95 backdrop-blur-md border-b border-[var(--color-line-subtle)]">
-          <h1 className="text-2xl font-bold font-heading text-gradient text-left">
-            KQL Library
-          </h1>
-        </div>
         <div className="p-2 pt-3">
           {categories.map((category) => {
             const isExpanded = expandedCategories[category];
