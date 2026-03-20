@@ -153,7 +153,7 @@ const SidebarNavigation = ({
         <div className="p-2 pt-3">
           {categories.map((category) => {
             const isExpanded = expandedCategories[category];
-            const textColorClass = categoryInfo[category]?.textColor || "text-blue-400";
+            const textColorClass = categoryInfo[category]?.textColor || "text-white";
             const subcategories = getSubcategoriesFromQueries(category);
             
             return (
@@ -206,13 +206,13 @@ const SidebarNavigation = ({
       </div>
 
       {/* Right panel: Queries */}
-      <div className="w-72 bg-[var(--color-bg-1)]/85 overflow-y-auto h-full">
+      <div className="w-72 bg-[var(--color-bg-0)] overflow-y-auto h-full border-r border-[var(--color-line-subtle)]">
         <div className="p-2">
           {selectedCategory ? (
             currentQueries.length > 0 ? (
               <div>
                 <div className="p-2 border-b border-[var(--color-line-subtle)] mb-2">
-                  <h3 className="text-sm font-medium text-[var(--color-muted)]">
+                  <h3 className="text-sm font-medium text-[var(--color-fg-0)]">
                     {selectedSubCategory 
                       ? `${selectedCategory} / ${parseSubcategoryKey(selectedSubCategory).subcategory}` 
                       : selectedCategory}
@@ -235,12 +235,12 @@ const SidebarNavigation = ({
                 ))}
               </div>
             ) : (
-              <div className="text-center p-6 text-slate-500">
+              <div className="text-center p-6 text-[var(--color-fg-1)]">
                 No queries available for this {selectedSubCategory ? "subcategory" : "category"}
               </div>
             )
           ) : (
-            <div className="text-center p-6 text-slate-500">
+            <div className="text-center p-6 text-[var(--color-fg-1)]">
               Select a category to view available queries
             </div>
           )}

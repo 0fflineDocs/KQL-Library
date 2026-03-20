@@ -192,7 +192,7 @@ const SearchModal = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {categories.map((category, index) => {
                   const info = categoryInfo[category];
-                  const textColorClass = info?.textColor || "text-blue-400";
+                  const textColorClass = info?.textColor || "text-white";
                   
                   // Get all subcategories for this category from actual queries
                   const subcategories = [...new Set(

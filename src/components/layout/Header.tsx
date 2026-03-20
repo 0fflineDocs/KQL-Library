@@ -10,8 +10,8 @@ interface HeaderProps {
 const Header = ({ onOpenSearch }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-40 h-16 bg-[var(--color-bg-0)]/95 backdrop-blur-md border-b border-[var(--color-divider)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
-        <h1 className="font-heading text-2xl font-bold text-gradient">
+      <div className="w-full px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+        <h1 className="font-heading text-2xl font-bold text-[var(--color-fg-0)] text-left">
           KQL Library
         </h1>
         <div className="flex items-center gap-3">

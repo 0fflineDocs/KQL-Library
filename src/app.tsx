@@ -18,6 +18,55 @@ const parseSubcategoryKey = (key: string | null) => {
   return { category, subcategory };
 };
 
+const tagCaseOverrides: Record<string, string> = {
+  qrcode: 'QR-Code',
+  signinlogs: 'SigninLogs',
+  auditlogs: 'AuditLogs',
+  cloudappevents: 'CloudAppEvents',
+  officeactivity: 'OfficeActivity',
+  apipermissions: 'APIPermissions',
+  osversion: 'OSVersion',
+  intuneauditlogs: 'IntuneAuditLogs',
+  exploitguard: 'ExploitGuard',
+  aiagents: 'AIAgents',
+  sharepoint: 'SharePoint',
+  onedrive: 'OneDrive',
+  html: 'HTML',
+  url: 'URL',
+  urls: 'URLs',
+  zip: 'ZIP',
+  tld: 'TLD',
+  mfa: 'MFA',
+  mde: 'MDE',
+  pii: 'PII',
+  mcp: 'MCP',
+  http: 'HTTP',
+  ip: 'IP',
+  cve: 'CVE',
+  system: 'SYSTEM'
+};
+
+const normalizeTagCase = (tag: string) => {
+  const normalized = tag.trim();
+  if (!normalized) return normalized;
+
+  return normalized
+    .split(/(\s+|-|\/)/)
+    .map((part) => {
+      if (/^\s+$|^[-/]$/.test(part)) {
+        return part;
+      }
+
+      const override = tagCaseOverrides[part.toLowerCase()];
+      if (override) {
+        return override;
+      }
+
+      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+    })
+    .join('');
+};
+
 const KQLLibrary = () => {
   // Define the preferred order of categories
   const preferredCategoryOrder = [
@@ -69,18 +118,18 @@ const KQLLibrary = () => {
     
     // Define color schemes for different categories
     const colorSchemes: Record<string, { textColor: string }> = {
-      "Entra ID": { textColor: "text-blue-400" },
-      "Defender for Identity": { textColor: "text-amber-400" },
-      "Defender for Endpoint": { textColor: "text-emerald-400" },
-      "Defender for Office 365": { textColor: "text-orange-400" },
-      "Defender for Cloud Apps": { textColor: "text-purple-400" },
-      "M365 Copilot / Agents": { textColor: "text-fuchsia-400" },
-      "Sentinel": { textColor: "text-red-400" },
-      "Intune": { textColor: "text-cyan-400" }
+      "Entra ID": { textColor: "text-white" },
+      "Defender for Identity": { textColor: "text-white" },
+      "Defender for Endpoint": { textColor: "text-white" },
+      "Defender for Office 365": { textColor: "text-white" },
+      "Defender for Cloud Apps": { textColor: "text-white" },
+      "M365 Copilot / Agents": { textColor: "text-white" },
+      "Sentinel": { textColor: "text-white" },
+      "Intune": { textColor: "text-white" }
     };
     
     // Apply default colors for new/unknown categories
-    const defaultColors = { textColor: "text-slate-300" };
+    const defaultColors = { textColor: "text-white" };
     
     // Create category info for each unique category (in sorted order)
     sortedCategories.forEach(category => {
@@ -163,15 +212,20 @@ const KQLLibrary = () => {
                 console.warn(`Skipping invalid query in ${fileName}`, query);
                 return;
               }
+
+              const normalizedQuery: Query = {
+                ...query,
+                tags: query.tags?.map(normalizeTagCase)
+              };
               
               // Initialize category array if it doesn't exist
-              if (!newQueriesByCategory[query.category]) {
-                newQueriesByCategory[query.category] = [];
+              if (!newQueriesByCategory[normalizedQuery.category]) {
+                newQueriesByCategory[normalizedQuery.category] = [];
               }
               
               // Add the query to its category
-              newQueriesByCategory[query.category].push(query);
-              allQueries.push(query);
+              newQueriesByCategory[normalizedQuery.category].push(normalizedQuery);
+              allQueries.push(normalizedQuery);
             });
             
             console.log(`Successfully loaded ${queryArray.length} queries from ${fileName}`);
