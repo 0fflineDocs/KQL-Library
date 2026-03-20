@@ -282,26 +282,6 @@ const KQLLibrary = () => {
     setSearchTerm('');
   };
 
-  // Debug component
-  const renderDebugInfo = () => {
-    if (process.env.NODE_ENV === 'production') return null;
-    
-    return (
-      <div className="fixed bottom-2 right-2 bg-black/70 text-white p-2 text-xs rounded z-50">
-        <div>Total Queries: {queries.length}</div>
-        <div>Categories with queries: {Object.keys(queriesByCategory).filter(cat => queriesByCategory[cat]?.length > 0).join(', ')}</div>
-        <div>Selected Category: {selectedCategory || 'None'}</div>
-        <div>
-          Selected Category Queries: {selectedCategory && queriesByCategory[selectedCategory] 
-            ? queriesByCategory[selectedCategory].length 
-            : 0}
-        </div>
-        <div>Selected SubCategory: {selectedSubCategory ? parseSubcategoryKey(selectedSubCategory).subcategory : 'None'}</div>
-        <div>Current Query: {selectedQuery?.title || 'None'}</div>
-      </div>
-    );
-  };
-
   // Handle force reload
   const handleForceReload = () => {
     console.log("Force reloading queries...");
@@ -364,9 +344,6 @@ const KQLLibrary = () => {
         queries={queries}
         setSelectedQuery={setSelectedQuery}
       />
-      
-      {/* Debug info */}
-      {renderDebugInfo()}
       
       {/* Vercel Analytics */}
       <Analytics />
