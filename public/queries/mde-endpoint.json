@@ -164,5 +164,109 @@
       "severity",
       "defender"
     ]
+  },
+  {
+    "title": "Device Vulnerability Summary by Severity",
+    "description": "Summarizes Microsoft software vulnerabilities per device, grouped by severity and ordered by critical vulnerability count.",
+    "query": "DeviceTvmSoftwareVulnerabilities\n| summarize ['Critical Severity Vulnerabilities']=make_set_if(CveId, SoftwareVendor == \"microsoft\" and VulnerabilitySeverityLevel == \"Critical\"),\n   ['High Severity Vulnerabilities']=make_set_if(CveId, SoftwareVendor == \"microsoft\" and VulnerabilitySeverityLevel == \"High\"),\n   ['Medium Severity Vulnerabilities']=make_set_if(CveId, SoftwareVendor == \"microsoft\" and VulnerabilitySeverityLevel == \"Medium\"), \n   ['Low Severity Vulnerabilities']=make_set_if(CveId, SoftwareVendor == \"microsoft\" and VulnerabilitySeverityLevel == \"Low\")\n   by DeviceName\n| sort by array_length(['Critical Severity Vulnerabilities']) desc",
+    "category": "Defender for Endpoint",
+    "subCategory": "Vulnerability Management",
+    "tags": [
+      "vulnerability",
+      "severity",
+      "device inventory",
+      "cve"
+    ]
+  },
+  {
+    "title": "Recently Updated Critical Vulnerabilities",
+    "description": "Lists critical vulnerabilities updated in the knowledge base during the last 30 days and the affected devices.",
+    "query": "let newVuln = DeviceTvmSoftwareVulnerabilitiesKB\n| where VulnerabilitySeverityLevel == \"Critical\"\n| where LastModifiedTime >ago(30day); DeviceTvmSoftwareVulnerabilities\n| join newVuln on CveId\n| summarize dcount(DeviceId) by DeviceName, DeviceId, Timestamp=LastModifiedTime, SoftwareName, SoftwareVendor, SoftwareVersion, VulnerabilitySeverityLevel, CvssScore, IsExploitAvailable\n| project Timestamp, DeviceName, SoftwareName, SoftwareVendor, SoftwareVersion, VulnerabilitySeverityLevel, CvssScore, IsExploitAvailable, DeviceId",
+    "category": "Defender for Endpoint",
+    "subCategory": "Vulnerability Management",
+    "tags": [
+      "vulnerability",
+      "critical",
+      "recent",
+      "cve"
+    ]
+  },
+  {
+    "title": "Noncompliant Antivirus Configurations",
+    "description": "Lists applicable Defender Antivirus security configurations that are not compliant, with risk and impact details.",
+    "query": "DeviceTvmSecureConfigurationAssessment\n| where ConfigurationSubcategory == 'Antivirus' and IsApplicable == 1 and IsCompliant == 0\n| join kind=leftouter (\n  DeviceTvmSecureConfigurationAssessmentKB\n  | project ConfigurationId, ConfigurationName, ConfigurationDescription, RiskDescription, Tags, ConfigurationImpact\n) on ConfigurationId\n| project DeviceName, OSPlatform, ConfigurationId, ConfigurationName, ConfigurationCategory, ConfigurationSubcategory, ConfigurationDescription, RiskDescription, ConfigurationImpact, Tags",
+    "category": "Defender for Endpoint",
+    "subCategory": "Security Configuration",
+    "tags": [
+      "antivirus",
+      "configuration",
+      "compliance",
+      "defender"
+    ]
+  },
+  {
+    "title": "Device Security Posture",
+    "description": "Summarizes selected security configuration checks for each device, including sensor, antivirus, BitLocker, and network protection status.",
+    "query": "DeviceTvmSecureConfigurationAssessment\n| where ConfigurationId in ('scid-91', 'scid-2000', 'scid-2001', 'scid-2002', 'scid-2003', 'scid-2010', 'scid-2011', 'scid-2012', 'scid-2013', \n'scid-2014', 'scid-2016', 'scid-96', 'scid-2090')\n| summarize arg_max(Timestamp, IsCompliant, IsApplicable) by DeviceName, ConfigurationId\n| extend Test = case(\nConfigurationId == \"scid-2090\", \"BitLockerEnabled\",\nConfigurationId == \"scid-2000\", \"SensorEnabled\",\nConfigurationId == \"scid-2001\", \"SensorDataCollection\",\nConfigurationId == \"scid-2002\", \"ImpairedCommunications\",\nConfigurationId == \"scid-2003\", \"TamperProtection\",\nConfigurationId == \"scid-2010\", \"AntivirusEnabled\",\nConfigurationId == \"scid-2011\", \"AntivirusSignatureVersion\",\nConfigurationId == \"scid-2012\", \"RealtimeProtection\",\nConfigurationId == \"scid-91\", \"BehaviorMonitoring\",\nConfigurationId == \"scid-2013\", \"PUAProtection\",\nConfigurationId == \"scid-2014\", \"AntivirusReporting\",\nConfigurationId == \"scid-2016\", \"CloudProteciton\",\nConfigurationId == \"scid-96\", \"NetworkProtection\",\n\"N/A\"),\nResult = case(IsApplicable == 0, \"N/A\", IsCompliant == 1, \"Compliant\", \"Non Compliant\") | extend packed = pack(Test, Result) | summarize Tests = make_bag(packed) by DeviceName | evaluate bag_unpack(Tests)",
+    "category": "Defender for Endpoint",
+    "subCategory": "Security Configuration",
+    "tags": [
+      "device posture",
+      "configuration",
+      "compliance",
+      "sensor",
+      "antivirus"
+    ]
+  },
+  {
+    "title": "Known Exploited Vulnerabilities per Device",
+    "description": "Counts CVEs from CISA’s Known Exploited Vulnerabilities catalog affecting each device.",
+    "query": "let KEV=\nexternaldata(cveID: string, vendorProject: string, product: string, vulnerabilityName: string, dateAdded: datetime, shortDescription: string, requiredAction: string, dueDate: datetime)\n[\nh@'https://www.cisa.gov/sites/default/files/csv/known_exploited_vulnerabilities.csv'\n]\nwith(format='csv',ignorefirstrecord=true);\nDeviceTvmSoftwareVulnerabilities\n| project DeviceName, OSPlatform, cveID=CveId\n| join kind=inner KEV on cveID\n| summarize ['Vulnerabilities']=make_set(cveID) by DeviceName\n| extend ['Count of Known Exploited Vulnerabilities'] = array_length(['Vulnerabilities'])\n| sort by ['Count of Known Exploited Vulnerabilities']",
+    "category": "Defender for Endpoint",
+    "subCategory": "Vulnerability Management",
+    "tags": [
+      "vulnerability",
+      "CISA KEV",
+      "exploited",
+      "device"
+    ]
+  },
+  {
+    "title": "Inactive or Noncompliant Sensors",
+    "description": "Shows recent sensor configuration status per device to help identify inactive or noncompliant sensors.",
+    "query": "DeviceTvmSecureConfigurationAssessment\n| where ConfigurationId in (\"scid-91\", \"scid-2000\", \"scid-2001\") and Timestamp >= ago(30d)\n| summarize arg_max(Timestamp, IsCompliant, IsApplicable) by DeviceId, ConfigurationId\n| extend Test = case(\n    ConfigurationId == \"scid-2000\", \"SensorEnabled\",\n     \"N/A\"),\n    Result = case(IsApplicable == 0, \"N/A\", IsCompliant == 1, \"GOOD\", \"BAD\")\n| extend packed = pack(Test, Result)\n| summarize Tests = make_bag(packed) by DeviceId\n| evaluate bag_unpack(Tests)",
+    "category": "Defender for Endpoint",
+    "subCategory": "Inventory Management",
+    "tags": [
+      "sensor",
+      "inactive",
+      "device health",
+      "compliance"
+    ]
+  },
+  {
+    "title": "Vulnerabilities with CVE Details",
+    "description": "Lists distinct vulnerable software and CVEs with descriptions, severity, exploit availability, and CVSS scores.",
+    "query": "DeviceTvmSoftwareVulnerabilities\n| project DeviceName, SoftwareName, CveId, SoftwareVersion, VulnerabilitySeverityLevel\n| join (DeviceTvmSoftwareVulnerabilitiesKB\n| project AffectedSoftware, VulnerabilityDescription , CveId , CvssScore , IsExploitAvailable) on CveId\n| project CveId , SoftwareName , SoftwareVersion , VulnerabilityDescription , VulnerabilitySeverityLevel, IsExploitAvailable , CvssScore\n| distinct SoftwareName , SoftwareVersion, CveId, VulnerabilityDescription , VulnerabilitySeverityLevel, IsExploitAvailable\n| sort by SoftwareName asc , SoftwareVersion",
+    "category": "Defender for Endpoint",
+    "subCategory": "Vulnerability Management",
+    "tags": [
+      "vulnerability",
+      "cve",
+      "cvss",
+      "exploit"
+    ]
+  },
+  {
+    "title": "Onboarded Defender for Endpoint Devices",
+    "description": "Lists devices reporting the Defender for Endpoint onboarding configuration state.",
+    "query": "DeviceTvmSecureConfigurationAssessment\n| where ConfigurationId == \"scid-2010\" and isnotnull(Context)\n| extend data=parsejson(Context)\n| project DeviceId, DeviceName, data;",
+    "category": "Defender for Endpoint",
+    "subCategory": "Inventory Management",
+    "tags": [
+      "onboarding",
+      "device inventory",
+      "defender"
+    ]
   }
 ]
