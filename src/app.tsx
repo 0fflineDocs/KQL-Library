@@ -348,7 +348,7 @@ const KQLLibrary = () => {
       <Header onOpenSearch={() => setIsSearchModalOpen(true)} />
 
       {/* Main content area with sidebar and query display */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="library-workspace flex flex-1 overflow-hidden">
         {/* Sidebar navigation */}
         <SidebarNavigation 
           categories={categories}
