@@ -2,7 +2,7 @@
   {
     "title": "Dormant Accounts",
     "description": "Users with no sign-in in 90 days",
-    "query": "SigninLogs | summarize count() by UserPrincipalName | where count_ == 0",
+    "query": "let lookback = 90d;\n// IdentityInfo is the account inventory; users absent from SigninLogs in the window are dormant.\n// SigninLogs retention must cover the full lookback.\nlet activeUsers = SigninLogs\n    | where TimeGenerated > ago(lookback)\n    | distinct UPN = tolower(UserPrincipalName);\nIdentityInfo\n| where TimeGenerated > ago(14d)\n| summarize arg_max(TimeGenerated, *) by AccountUPN\n| where IsAccountEnabled == true\n| extend UPN = tolower(AccountUPN)\n| join kind=leftanti activeUsers on UPN\n| project AccountUPN, AccountDisplayName, Department, AccountCreationTime",
     "category": "Defender for Identity",
     "subCategory": "Dormant Accounts",
     "tags": [
@@ -106,7 +106,7 @@
   {
     "title": "Potentially Unused Service Accounts",
     "description": "Identifies service accounts with no authentication activity in the past 30 days",
-    "query": "let timeframe = 30d;\nlet accounts = dynamic([\"svc_account1@contoso.com\", \"svc_account2@contoso.com\"]);\nIdentityLogonEvents\n| where Timestamp >= ago(timeframe)\n| where AccountUpn in (accounts)\n| summarize AuthCount=count() by AccountUpn\n| where AuthCount == 0",
+    "query": "let timeframe = 30d;\nlet accounts = datatable(AccountUpn: string)[\"svc_account1@contoso.com\", \"svc_account2@contoso.com\"]\n    | extend AccountUpn = tolower(AccountUpn);\nlet activeAccounts = IdentityLogonEvents\n    | where Timestamp >= ago(timeframe)\n    | distinct AccountUpn = tolower(AccountUpn);\naccounts\n| join kind=leftanti activeAccounts on AccountUpn",
     "category": "Defender for Identity",
     "subCategory": "Service Accounts",
     "tags": [

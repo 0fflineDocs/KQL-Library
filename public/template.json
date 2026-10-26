@@ -14,7 +14,7 @@
   {
     "title": "Dormant Accounts",
     "description": "Users with no sign-in in 90 days",
-    "query": "SigninLogs |\n summarize count() by UserPrincipalName |\n where count_ == 0",
+    "query": "let lookback = 90d;\n// IdentityInfo is the account inventory; users absent from SigninLogs in the window are dormant.\n// SigninLogs retention must cover the full lookback.\nlet activeUsers = SigninLogs\n    | where TimeGenerated > ago(lookback)\n    | distinct UPN = tolower(UserPrincipalName);\nIdentityInfo\n| where TimeGenerated > ago(14d)\n| summarize arg_max(TimeGenerated, *) by AccountUPN\n| where IsAccountEnabled == true\n| extend UPN = tolower(AccountUPN)\n| join kind=leftanti activeUsers on UPN\n| project AccountUPN, AccountDisplayName, Department, AccountCreationTime",
     "category": "Defender for Identity",
     "subCategory": "Dormant Accounts",
     "tags": [

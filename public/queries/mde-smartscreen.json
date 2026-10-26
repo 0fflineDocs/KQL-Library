@@ -14,7 +14,7 @@
   {
     "title": "SmartScreen Application Blocks",
     "description": "Detects application execution blocks by SmartScreen over the past 7 days, filtering out test files",
-    "query": "let minTimeRange = ago(7d);\nDeviceEvents\n    | where ActionType == \"SmartScreenAppWarning\" and Timestamp > minTimeRange\n            // Filter out SmartScreen test files downloaded from https://demo.smartscreen.msft.net/\n            and not (FileName startswith \"knownmalicious\" and FileName endswith \".exe\")\n    | extend ParsedFields=parse_json(AdditionalFields)\n    | project Timestamp, DeviceName, BlockedFileName=FileName, SHA1, Experience=tostring(ParsedFields.Experience), ActivityId=tostring(ParsedFields.ActivityId), InitiatingProcessFileName",
+    "query": "let minTimeRange = ago(7d);\nDeviceEvents\n    | where ActionType == \"SmartScreenAppWarning\" and Timestamp > minTimeRange\n    | extend ParsedFields=parse_json(AdditionalFields)\n    | project Timestamp, DeviceName, BlockedFileName=FileName, SHA1, Experience=tostring(ParsedFields.Experience), ActivityId=tostring(ParsedFields.ActivityId), InitiatingProcessFileName",
     "category": "Defender for Endpoint",
     "subCategory": "SmartScreen",
     "tags": [
